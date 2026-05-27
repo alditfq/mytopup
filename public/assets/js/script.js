@@ -26,6 +26,25 @@ document.addEventListener('DOMContentLoaded', () => {
             totalSeconds = diff > 0 ? diff : 0;
         }
 
+        const disableFlashSaleButton = () => {
+            const btn = document.getElementById('flash-sale-action-btn');
+            if (btn) {
+                btn.removeAttribute('href');
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.className = btn.className.replace('neup-orange-flat', 'bg-slate-700').replace('hover:neup-orange-pressed', '');
+                btn.innerHTML = `Flash Sale Berakhir <i data-lucide="x-circle" class="h-4 w-4"></i>`;
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+        };
+
+        if (totalSeconds <= 0) {
+            disableFlashSaleButton();
+        }
+
         const timer = setInterval(() => {
             if (totalSeconds > 0) {
                 totalSeconds--;
@@ -40,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hourBox.textContent = '00';
                 minBox.textContent = '00';
                 secBox.textContent = '00';
+                disableFlashSaleButton();
                 clearInterval(timer);
             }
         }, 1000);

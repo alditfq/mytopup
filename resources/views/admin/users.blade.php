@@ -80,7 +80,7 @@
               <th class="pb-3.5">Saldo Dompet</th>
               <th class="pb-3.5">Total Belanja</th>
               <th class="pb-3.5">Status Akun</th>
-              <th class="pb-3.5 text-right pr-4">Aksi Kontrol</th>
+              <th class="pb-3.5 text-right pr-4">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800">
@@ -159,51 +159,13 @@
                   @endif
                 </td>
                 
-                <!-- Controls -->
-                <td class="py-4 text-right pr-4">
-                  <div class="inline-flex gap-2">
-                    <button onclick="togglePasswordForm({{ $usr->id }})" class="border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100 font-extrabold rounded-xl px-3 py-2 text-[10px] cursor-pointer transition-all active:scale-95 shadow-sm">
-                      Reset Sandi
-                    </button>
-                    @if($usr->role !== 'admin')
-                      <form action="{{ route('admin.users.toggle-suspend', $usr->id) }}" method="POST" class="m-0 p-0">
-                        @csrf
-                        <button type="submit" class="border border-slate-700 font-extrabold rounded-xl px-3 py-2 text-[10px] cursor-pointer transition-all active:scale-95 shadow-sm bg-slate-800 hover:bg-slate-700 {{ $usr->is_suspended ? 'text-emerald-400' : 'text-rose-400' }}">
-                          {{ $usr->is_suspended ? 'Aktifkan' : 'Suspend' }}
-                        </button>
-                      </form>
-                    @endif
-                  </div>
+                <!-- Controls Removed -->
+                <td class="py-4 text-right pr-4 text-slate-500 font-bold">
+                  N/A
                 </td>
               </tr>
 
-              <!-- PASSWORD RESET FORM DRAWER -->
-              <tr id="password-row-{{ $usr->id }}" class="hidden bg-slate-900/10">
-                <td colspan="6" class="p-5 border-t border-b border-slate-800">
-                  <div class="max-w-md text-left font-bold text-slate-300 p-2">
-                    <h4 class="text-xs font-black text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                      <i data-lucide="lock" class="h-4 w-4 text-cyan-400"></i> Setel Ulang Kata Sandi: {{ $usr->name }}
-                    </h4>
-                    <form action="{{ route('admin.users.reset-password', $usr->id) }}" method="POST" class="flex flex-col gap-3">
-                      @csrf
-                      <div class="grid grid-cols-2 gap-3">
-                        <div class="flex flex-col gap-1">
-                          <label class="text-[9px] uppercase tracking-wider text-slate-400">Kata Sandi Baru</label>
-                          <input type="password" name="password" required placeholder="Min. 6 Karakter" class="rounded-xl border border-slate-700 bg-slate-800 text-white py-2 px-3 text-xs font-semibold focus:outline-none">
-                        </div>
-                        <div class="flex flex-col gap-1">
-                          <label class="text-[9px] uppercase tracking-wider text-slate-400">Konfirmasi Sandi</label>
-                          <input type="password" name="password_confirmation" required placeholder="Konfirmasi Sandi" class="rounded-xl border border-slate-700 bg-slate-800 text-white py-2 px-3 text-xs font-semibold focus:outline-none">
-                        </div>
-                      </div>
-                      <div class="flex gap-2 justify-end mt-1">
-                        <button type="button" onclick="togglePasswordForm({{ $usr->id }})" class="border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold rounded-lg px-4 py-2 text-[10px] cursor-pointer">Batal</button>
-                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-cyan-500 border-none text-white font-extrabold rounded-lg px-4 py-2 text-[10px] cursor-pointer hover:shadow-md active:scale-95 transition-all">Reset Password</button>
-                      </div>
-                    </form>
-                  </div>
-                </td>
-              </tr>
+
 
               <!-- TRANSACTIONS LIST DRAWER -->
               <tr id="tx-row-{{ $usr->id }}" class="hidden bg-slate-900/10">

@@ -14,11 +14,7 @@
         <h1 class="text-2xl font-black mt-2 tracking-tight text-white">Overview Ringkasan Sistem</h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">Status pendapatan, rekap transaksi masuk, dan rekap pendaftaran pengguna otomatis.</p>
       </div>
-      <div class="mt-4 md:mt-0 flex gap-3">
-        <a href="{{ route('admin.chat') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-xs font-bold text-white shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all border-none cursor-pointer">
-          <i data-lucide="message-square" class="h-4 w-4"></i> Konsol Live Chat
-        </a>
-      </div>
+      <div></div>
     </div>
 
     <!-- STATS CARD GRID -->

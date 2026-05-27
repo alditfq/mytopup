@@ -13,9 +13,7 @@
         <h1 class="text-2xl font-black mt-2 tracking-tight text-white">Laporan & Analitik Penjualan</h1>
         <p class="text-xs text-slate-400 mt-1 font-semibold">Data real-time 30 hari terakhir — pendapatan, volume transaksi, dan metode bayar terpopuler.</p>
       </div>
-      <a href="{{ route('admin.reports.export') }}" class="bg-gradient-to-r from-blue-600 to-cyan-500 border-none text-white font-extrabold text-xs py-3.5 px-5 rounded-2xl cursor-pointer hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all shadow-md flex items-center gap-2 decoration-none">
-        <i data-lucide="download" class="h-4 w-4"></i> Ekspor Rekap CSV
-      </a>
+      <div></div>
     </div>
 
     <!-- Summary Stats Row -->

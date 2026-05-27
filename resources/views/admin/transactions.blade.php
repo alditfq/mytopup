@@ -51,9 +51,11 @@
         <div class="flex gap-2">
           <select name="status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-700 bg-slate-800 text-white py-2.5 px-4 text-xs font-bold focus:outline-none cursor-pointer">
             <option value="all" {{ request('status') === 'all' || !request('status') ? 'selected' : '' }}>Semua Status</option>
-            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>PENDING</option>
-            <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>SUCCESS (PAID)</option>
-            <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>FAILED</option>
+            <option value="pending"          {{ request('status') === 'pending'          ? 'selected' : '' }}>PENDING</option>
+            <option value="success"          {{ request('status') === 'success'          ? 'selected' : '' }}>SUCCESS (PAID)</option>
+            <option value="waiting_delivery" {{ request('status') === 'waiting_delivery' ? 'selected' : '' }}>WAITING DELIVERY</option>
+            <option value="delivered"        {{ request('status') === 'delivered'        ? 'selected' : '' }}>DELIVERED</option>
+            <option value="failed"           {{ request('status') === 'failed'           ? 'selected' : '' }}>FAILED</option>
           </select>
 
           @if(request()->filled('search') || request()->filled('game_id') || request()->filled('status'))
@@ -98,7 +100,11 @@
                   </div>
                 </td>
                 <td class="py-4 font-mono font-bold text-slate-300">
-                  {{ $tx->target_id }}{{ $tx->zone_id ? ' (' . $tx->zone_id . ')' : '' }}
+                  @if($tx->game_account_id)
+                    <span class="text-slate-500 font-sans font-bold text-[10px]">— Akun Game</span>
+                  @else
+                    {{ $tx->target_id }}{{ $tx->zone_id ? ' (' . $tx->zone_id . ')' : '' }}
+                  @endif
                 </td>
                 <td class="py-4 font-mono font-black text-cyan-400">
                   Rp {{ number_format($tx->total_payment, 0, ',', '.') }}
@@ -107,6 +113,10 @@
                 <td class="py-4">
                   @if($tx->status === 'success')
                     <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[8px] font-black text-emerald-400 uppercase tracking-wider shadow-sm">PAID</span>
+                  @elseif($tx->status === 'waiting_delivery')
+                    <span class="rounded bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-[8px] font-black text-amber-400 uppercase tracking-wider animate-pulse shadow-sm">PROCESS</span>
+                  @elseif($tx->status === 'delivered')
+                    <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[8px] font-black text-emerald-400 uppercase tracking-wider shadow-sm">DELIVERED</span>
                   @elseif($tx->status === 'failed')
                     <span class="rounded bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-[8px] font-black text-rose-400 uppercase tracking-wider shadow-sm">FAILED</span>
                   @else
@@ -118,13 +128,26 @@
                 </td>
                 <td class="py-4 text-right pr-4">
                   <div class="flex items-center justify-end gap-2.5">
-                    <form action="{{ route('admin.transactions.update-status', $tx->id) }}" method="POST" class="m-0 p-0 flex gap-2 justify-end">
+                    <form action="{{ route('admin.transactions.update-status', $tx->id) }}" method="POST" class="m-0 p-0 flex gap-2 justify-end items-center">
                       @csrf
-                      <select name="status" class="rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1.5 text-[10px] font-bold focus:outline-none cursor-pointer">
-                        <option value="pending" {{ $tx->status === 'pending' ? 'selected' : '' }}>PENDING</option>
-                        <option value="success" {{ $tx->status === 'success' ? 'selected' : '' }}>SUCCESS</option>
-                        <option value="failed" {{ $tx->status === 'failed' ? 'selected' : '' }}>FAILED</option>
-                      </select>
+                      @if($tx->game_account_id)
+                        {{-- Pembelian akun game: status 'success' tidak tersedia --}}
+                        <span class="rounded bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[7px] font-black text-purple-400 uppercase tracking-wider leading-none whitespace-nowrap">Akun</span>
+                        <select name="status" class="rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1.5 text-[10px] font-bold focus:outline-none cursor-pointer">
+                          <option value="pending"          {{ $tx->status === 'pending'          ? 'selected' : '' }}>PENDING</option>
+                          <option value="waiting_delivery" {{ $tx->status === 'waiting_delivery' ? 'selected' : '' }}>WAITING DELIVERY</option>
+                          <option value="delivered"        {{ $tx->status === 'delivered'        ? 'selected' : '' }}>DELIVERED</option>
+                          <option value="failed"           {{ $tx->status === 'failed'           ? 'selected' : '' }}>FAILED</option>
+                        </select>
+                      @else
+                        {{-- Topup item biasa: status 'waiting_delivery' dan 'delivered' tidak tersedia --}}
+                        <span class="rounded bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 text-[7px] font-black text-cyan-400 uppercase tracking-wider leading-none whitespace-nowrap">Topup</span>
+                        <select name="status" class="rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1.5 text-[10px] font-bold focus:outline-none cursor-pointer">
+                          <option value="pending" {{ $tx->status === 'pending' ? 'selected' : '' }}>PENDING</option>
+                          <option value="success" {{ $tx->status === 'success' ? 'selected' : '' }}>SUCCESS</option>
+                          <option value="failed"  {{ $tx->status === 'failed'  ? 'selected' : '' }}>FAILED</option>
+                        </select>
+                      @endif
                       <button type="submit" class="border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100 font-extrabold rounded-xl px-2.5 py-1.5 text-[10px] cursor-pointer transition-all active:scale-95 shadow-sm">
                         Set
                       </button>

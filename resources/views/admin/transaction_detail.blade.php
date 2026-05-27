@@ -59,10 +59,15 @@
               <span class="text-right text-cyan-400 font-bold font-mono">{{ $tx->nominal_name }}</span>
             </div>
             <div class="grid grid-cols-2 gap-4 border-b border-slate-800/60 pb-3">
-              <span class="text-slate-400 uppercase text-[9px] tracking-wider">Target Player ID</span>
-              <span class="text-right text-white font-mono font-bold">{{ $tx->target_id }}</span>
+              @if($tx->game_account_id)
+                <span class="text-slate-400 uppercase text-[9px] tracking-wider">Email Penerima Akun</span>
+                <span class="text-right text-white font-mono font-bold">{{ $tx->target_id }}</span>
+              @else
+                <span class="text-slate-400 uppercase text-[9px] tracking-wider">Target Player ID</span>
+                <span class="text-right text-white font-mono font-bold">{{ $tx->target_id }}</span>
+              @endif
             </div>
-            @if($tx->zone_id)
+            @if(!$tx->game_account_id && $tx->zone_id)
               <div class="grid grid-cols-2 gap-4 border-b border-slate-800/60 pb-3">
                 <span class="text-slate-400 uppercase text-[9px] tracking-wider">Zone / Server ID</span>
                 <span class="text-right text-white font-mono font-bold">({{ $tx->zone_id }})</span>
@@ -85,6 +90,10 @@
               <span class="text-right">
                 @if($tx->status === 'success')
                   <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-[8px] font-black text-emerald-400 uppercase tracking-widest">PAID SUCCESS</span>
+                @elseif($tx->status === 'waiting_delivery')
+                  <span class="rounded bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[8px] font-black text-amber-400 uppercase tracking-widest animate-pulse">⏳ MENUNGGU PENGIRIMAN</span>
+                @elseif($tx->status === 'delivered')
+                  <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-[8px] font-black text-emerald-400 uppercase tracking-widest">✅ AKUN TERKIRIM</span>
                 @elseif($tx->status === 'failed')
                   <span class="rounded bg-rose-500/10 border border-rose-500/20 px-3 py-1 text-[8px] font-black text-rose-400 uppercase tracking-widest">FAILED / REFUNDED</span>
                 @else
@@ -115,6 +124,12 @@
                 <span class="text-slate-400 uppercase text-[9px] tracking-wider">Email Akun</span>
                 <span class="text-right text-slate-200">{{ $tx->user->email }}</span>
               </div>
+              @if($tx->game_account_id)
+                <div class="grid grid-cols-2 gap-4 border-b border-slate-800/60 pb-2.5">
+                  <span class="text-slate-400 uppercase text-[9px] tracking-wider">Email Tujuan Pengiriman</span>
+                  <span class="text-right text-cyan-400 font-mono font-bold">{{ $tx->target_id }}</span>
+                </div>
+              @endif
               <div class="grid grid-cols-2 gap-4">
                 <span class="text-slate-400 uppercase text-[9px] tracking-wider">No. WhatsApp</span>
                 <span class="text-right text-slate-200">{{ $tx->user->phone ?? '-' }}</span>
@@ -130,10 +145,17 @@
                 <span class="text-slate-400 uppercase text-[9px] tracking-wider">Pemberian Nickname</span>
                 <span class="text-right text-white font-mono font-bold">{{ $tx->nickname ?? '-' }}</span>
               </div>
-              <div class="grid grid-cols-2 gap-4">
-                <span class="text-slate-400 uppercase text-[9px] tracking-wider">Saluran Kontak</span>
-                <span class="text-right text-slate-300 font-mono">Diterima via Gerbang Pembayaran</span>
-              </div>
+              @if($tx->game_account_id)
+                <div class="grid grid-cols-2 gap-4">
+                  <span class="text-slate-400 uppercase text-[9px] tracking-wider">Email Tujuan Pengiriman</span>
+                  <span class="text-right text-cyan-400 font-mono font-bold">{{ $tx->target_id }}</span>
+                </div>
+              @else
+                <div class="grid grid-cols-2 gap-4">
+                  <span class="text-slate-400 uppercase text-[9px] tracking-wider">Saluran Kontak</span>
+                  <span class="text-right text-slate-300 font-mono">Diterima via Gerbang Pembayaran</span>
+                </div>
+              @endif
             </div>
           @endif
         </div>
@@ -142,6 +164,84 @@
       <!-- RIGHT SIDE: STATUS TIMELINE & MANUAL ACTIONS (Col 5) -->
       <div class="lg:col-span-5 space-y-6">
         
+        @if($tx->game_account_id)
+          <!-- ACCOUNT GAME FULFILLMENT PANEL -->
+          <div class="rounded-3xl border border-slate-800 p-5 md:p-6 bg-[#111827]/75 backdrop-blur-xl shadow-xl text-slate-300 text-left">
+            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3.5 mb-5">
+              <i data-lucide="key-round" class="h-4.5 w-4.5 text-pink-500"></i>
+              <h3 class="text-xs font-black uppercase tracking-wider text-white">Fulfillment Akun Game</h3>
+            </div>
+
+            @if($tx->status === 'waiting_delivery')
+              <div class="mb-4 bg-slate-800/40 rounded-2xl p-4 border border-slate-700/45">
+                <span class="text-[9px] uppercase tracking-wider text-pink-400 font-extrabold block mb-1.5">🔑 Kredensial Asli Database (Panduan Admin)</span>
+                <pre class="text-[10px] font-mono text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 m-0 overflow-x-auto whitespace-pre-wrap">{{ $tx->gameAccount->account_data }}</pre>
+              </div>
+
+              <form action="{{ route('admin.transactions.deliver-account', $tx->id) }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="flex flex-col gap-1.5">
+                  <label for="account_email" class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">Username / Email Akun</label>
+                  <input
+                    type="text"
+                    name="account_email"
+                    id="account_email"
+                    required
+                    placeholder="Masukkan email / username login akun..."
+                    class="w-full rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-3.5 py-2.5 text-xs font-bold focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label for="account_password" class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">Password Akun</label>
+                  <input
+                    type="text"
+                    name="account_password"
+                    id="account_password"
+                    required
+                    placeholder="Masukkan password akun..."
+                    class="w-full rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-3.5 py-2.5 text-xs font-bold focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label for="notes" class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">Catatan Tambahan (Opsional)</label>
+                  <textarea
+                    name="notes"
+                    id="notes"
+                    rows="3"
+                    placeholder="Contoh: Akun bind login Gmail, harap siapkan kode verifikasi..."
+                    class="w-full rounded-xl border border-slate-700 bg-slate-800 text-slate-200 px-3.5 py-2.5 text-xs font-bold focus:outline-none focus:border-pink-500 resize-none"
+                  ></textarea>
+                </div>
+
+                <button type="submit" class="w-full font-black tracking-wide uppercase py-3.5 rounded-xl transition-all cursor-pointer bg-gradient-to-r from-pink-500 to-indigo-600 hover:shadow-lg hover:shadow-pink-500/25 border-none text-white text-[11px] active:scale-98 flex items-center justify-center gap-2">
+                  <i data-lucide="mail" class="h-4 w-4"></i> KIRIM KREDENSIAL VIA EMAIL
+                </button>
+              </form>
+            @elseif($tx->status === 'delivered')
+              <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4.5 text-xs">
+                <div class="flex items-center gap-2 text-emerald-400 font-black">
+                  <i data-lucide="check-circle" class="h-4.5 w-4.5"></i>
+                  <span>SUKSES TERKIRIM</span>
+                </div>
+                <p class="text-[11px] text-slate-350 mt-2 font-medium leading-relaxed">
+                  Kredensial akun game telah dikirim ke email pembeli pada <strong class="text-white font-mono">{{ $tx->delivered_at->format('d M Y, H:i') }}</strong> oleh <strong class="text-white">{{ $tx->delivered_by }}</strong>.
+                </p>
+                <div class="mt-4 pt-3.5 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                  <span>Metode Pengiriman:</span>
+                  <span class="text-emerald-400 font-extrabold">Laravel Mail System</span>
+                </div>
+              </div>
+            @else
+              <div class="bg-slate-800/30 border border-slate-800 rounded-2xl p-4 text-center text-xs text-slate-400 font-bold py-6">
+                <i data-lucide="clock" class="h-8 w-8 text-slate-500 mx-auto mb-2"></i>
+                <span>Menunggu Pembayaran Pembeli Selesai</span>
+              </div>
+            @endif
+          </div>
+        @endif
+
         <!-- TIMELINE LOGS -->
         <div class="rounded-3xl border border-slate-800 p-5 md:p-6 bg-[#111827]/75 backdrop-blur-xl shadow-xl text-slate-300">
           <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3.5 mb-5">

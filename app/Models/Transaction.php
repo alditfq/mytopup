@@ -17,6 +17,7 @@ class Transaction extends Model
         'target_id',
         'zone_id',
         'nominal_id',
+        'game_account_id',
         'nominal_name',
         'nominal_price',
         'discount_applied',
@@ -25,11 +26,14 @@ class Transaction extends Model
         'status',
         'status_logs',
         'qr_code_url',
-        'va_number'
+        'va_number',
+        'delivered_at',
+        'delivered_by'
     ];
 
     protected $casts = [
-        'status_logs' => 'array'
+        'status_logs' => 'array',
+        'delivered_at' => 'datetime'
     ];
 
     public function game()
@@ -45,6 +49,11 @@ class Transaction extends Model
     public function nominal()
     {
         return $this->belongsTo(Nominal::class);
+    }
+
+    public function gameAccount()
+    {
+        return $this->belongsTo(GameAccount::class, 'game_account_id');
     }
 
     public function paymentMethod()

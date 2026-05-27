@@ -23,8 +23,6 @@ class User extends Authenticatable
         'phone',
         'balance',
         'cashback_saved',
-        'role',
-        'is_suspended',
         'password',
     ];
 

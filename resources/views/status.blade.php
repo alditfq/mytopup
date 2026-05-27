@@ -80,6 +80,14 @@
                   <span class="rounded-full bg-emerald-500/10 border border-emerald-500/15 px-3 py-1 text-[9px] font-black text-emerald-600 uppercase tracking-wider">
                     🎉 BERHASIL (PAID)
                   </span>
+                @elseif($transaction->status === 'waiting_delivery')
+                  <span class="rounded-full bg-amber-500/10 border border-amber-500/15 px-3 py-1 text-[9px] font-black text-amber-600 uppercase tracking-wider animate-pulse">
+                    ⏳ MENUNGGU PENGIRIMAN
+                  </span>
+                @elseif($transaction->status === 'delivered')
+                  <span class="rounded-full bg-emerald-500/10 border border-emerald-500/15 px-3 py-1 text-[9px] font-black text-emerald-600 uppercase tracking-wider">
+                    ✅ AKUN TERKIRIM
+                  </span>
                 @elseif($transaction->status === 'failed')
                   <span class="rounded-full bg-rose-500/10 border border-rose-500/15 px-3 py-1 text-[9px] font-black text-rose-600 uppercase tracking-wider">
                     ✕ GAGAL
@@ -98,8 +106,13 @@
                   <p class="text-slate-800">{{ $transaction->game->name }}</p>
                 </div>
                 <div class="neup-pressed-xs border border-white/30 rounded-2xl p-4 bg-transparent">
-                  <p class="text-[9px] text-slate-400 font-bold leading-none mb-1">Player / Server ID</p>
-                  <p class="text-slate-800 font-mono">{{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}</p>
+                  @if($transaction->game_account_id)
+                    <p class="text-[9px] text-slate-400 font-bold leading-none mb-1">Email Penerima Akun</p>
+                    <p class="text-slate-800 font-mono">{{ $transaction->target_id }}</p>
+                  @else
+                    <p class="text-[9px] text-slate-400 font-bold leading-none mb-1">Player / Server ID</p>
+                    <p class="text-slate-800 font-mono">{{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}</p>
+                  @endif
                 </div>
                 <div class="neup-pressed-xs border border-white/30 rounded-2xl p-4 bg-transparent">
                   <p class="text-[9px] text-slate-400 font-bold leading-none mb-1">Item Diamond</p>

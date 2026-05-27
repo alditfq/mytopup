@@ -29,24 +29,23 @@
       </div>
 
       <!-- Quick Navigation -->
-      <div class="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0 text-left">
-        <div class="md:grid md:grid-cols-2 md:gap-8">
-          <div>
-            <h3 class="text-sm font-bold tracking-wider text-slate-200 uppercase mb-4" id="footer-nav-title">Navigasi</h3>
-            <ul role="list" class="space-y-3 text-xs font-semibold">
-              <li><a href="{{ route('home') }}" class="hover:text-white transition-colors" id="footer-nav-catalog">Katalog Game</a></li>
-              <li><a href="{{ route('status') }}" class="hover:text-white transition-colors" id="footer-nav-track">Cek Histori Pesanan</a></li>
-              <li><a href="{{ route('support') }}" class="hover:text-white transition-colors" id="footer-nav-support">Hubungi Bantuan CS</a></li>
-            </ul>
-          </div>
-          <div class="mt-12 md:mt-0">
-            <h3 class="text-sm font-bold tracking-wider text-slate-200 uppercase mb-4" id="footer-legal-title">Hukum</h3>
-            <ul role="list" class="space-y-3 text-xs font-semibold">
-              <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-terms">Syarat & Ketentuan</a></li>
-              <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-privacy">Kebijakan Privasi</a></li>
-              <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-refund">Kebijakan Pengembalian</a></li>
-            </ul>
-          </div>
+      <div class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8 xl:col-span-2 xl:mt-0 text-left">
+        <div>
+          <h3 class="text-sm font-bold tracking-wider text-slate-200 uppercase mb-4" id="footer-nav-title">Navigasi</h3>
+          <ul role="list" class="space-y-3 text-xs font-semibold">
+            <li><a href="{{ route('home') }}" class="hover:text-white transition-colors" id="footer-nav-catalog">Katalog Game</a></li>
+            <li><a href="{{ route('status') }}" class="hover:text-white transition-colors" id="footer-nav-track">Cek Histori Pesanan</a></li>
+            <li><a href="{{ route('support') }}" class="hover:text-white transition-colors" id="footer-nav-support">Hubungi Bantuan CS</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-sm font-bold tracking-wider text-slate-200 uppercase mb-4" id="footer-legal-title">Hukum</h3>
+          <ul role="list" class="space-y-3 text-xs font-semibold">
+            <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-terms">Syarat & Ketentuan</a></li>
+            <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-privacy">Kebijakan Privasi</a></li>
+            <li><a href="#" class="hover:text-white transition-colors" id="footer-legal-refund">Kebijakan Pengembalian</a></li>
+          </ul>
         </div>
 
         <div>
@@ -57,8 +56,8 @@
               <span>support@gametopup.id</span>
             </li>
             <li class="flex items-center gap-2.5">
-              <i data-lucide="message-square" class="h-4 w-4 text-pink-400"></i>
-              <span id="footer-contact-chat">CS Chat Online (24/7)</span>
+              <i data-lucide="help-circle" class="h-4 w-4 text-pink-400"></i>
+              <span id="footer-contact-chat">Layanan CS Online (24/7)</span>
             </li>
             <li class="flex items-start gap-2.5">
               <i data-lucide="clock" class="h-4 w-4 text-fuchsia-400 mt-0.5"></i>

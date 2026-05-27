@@ -94,10 +94,13 @@
               <p id="bill-summary-game" class="text-slate-800">{{ $transaction->game->name }}</p>
             </div>
             <div class="neup-pressed-xs border border-white/30 rounded-2xl p-4.5 bg-transparent">
-              <p class="text-[10px] text-slate-400 font-bold leading-none mb-1.5">Player ID & Server</p>
-              <p id="bill-summary-player-id" class="text-slate-800 font-mono">
-                {{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}
-              </p>
+              @if($transaction->game_account_id)
+                <p class="text-[10px] text-slate-400 font-bold leading-none mb-1.5">Email Penerima Akun</p>
+                <p id="bill-summary-player-id" class="text-slate-800 font-mono">{{ $transaction->target_id }}</p>
+              @else
+                <p class="text-[10px] text-slate-400 font-bold leading-none mb-1.5">Player ID & Server</p>
+                <p id="bill-summary-player-id" class="text-slate-800 font-mono">{{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}</p>
+              @endif
             </div>
             <div class="neup-pressed-xs border border-white/30 rounded-2xl p-4.5 bg-transparent">
               <p class="text-[10px] text-slate-400 font-bold leading-none mb-1.5">Item Produk Top Up</p>

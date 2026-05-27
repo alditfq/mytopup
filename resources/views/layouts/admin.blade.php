@@ -65,11 +65,6 @@
               <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
               <span>Ringkasan Stats</span>
             </a>
-            
-            <a href="{{ route('admin.chat') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.chat') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="message-square" class="h-4 w-4"></i>
-              <span>Live Support Chat</span>
-            </a>
 
             <div class="pt-4 pb-1">
               <p class="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-4">Marketplace Management</p>
@@ -91,48 +86,37 @@
               <i data-lucide="tag" class="h-4 w-4"></i>
               <span>Kelola Promo / Banner</span>
             </a>
+            <a href="{{ route('admin.flash-sale') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.flash-sale') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
+              <i data-lucide="flame" class="h-4 w-4"></i>
+              <span>Kelola Flash Sale</span>
+            </a>
             <a href="{{ route('admin.payment-methods') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.payment-methods') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
               <i data-lucide="wallet" class="h-4 w-4"></i>
               <span>Metode Pembayaran</span>
             </a>
+            <a href="{{ route('admin.accounts') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.accounts*') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
+              <i data-lucide="key-round" class="h-4 w-4"></i>
+              <span>Kelola Akun Game</span>
+            </a>
 
             <div class="pt-4 pb-1">
-              <p class="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-4">Content & Social</p>
+              <p class="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-4">Administration & Users</p>
             </div>
 
-            <a href="{{ route('admin.faqs') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.faqs') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="help-circle" class="h-4 w-4"></i>
-              <span>Kelola FAQ (CRUD)</span>
-            </a>
-            <a href="{{ route('admin.testimonials') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.testimonials') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="smile" class="h-4 w-4"></i>
-              <span>Ulasan Pelanggan</span>
-            </a>
-            <a href="{{ route('admin.reviews') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.reviews') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="star" class="h-4 w-4"></i>
-              <span>Review & Rating</span>
-            </a>
-            <a href="{{ route('admin.marquee') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.marquee') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="megaphone" class="h-4 w-4"></i>
-              <span>Kelola Marquee</span>
-            </a>
             <a href="{{ route('admin.users') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.users') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
               <i data-lucide="users" class="h-4 w-4"></i>
               <span>Kelola Pengguna</span>
             </a>
 
             <div class="pt-4 pb-1">
-              <p class="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-4">Analytics & Settings</p>
+              <p class="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-4">Analytics</p>
             </div>
 
             <a href="{{ route('admin.reports') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.reports') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
               <i data-lucide="bar-chart-3" class="h-4 w-4"></i>
               <span>Laporan & Analitik</span>
             </a>
-            <a href="{{ route('admin.settings') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold transition-all decoration-none {{ Route::is('admin.settings') ? 'bg-blue-500/10 text-cyan-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent' }}">
-              <i data-lucide="settings" class="h-4 w-4"></i>
-              <span>Pengaturan Sistem</span>
-            </a>
+
           </nav>
         </div>
 
@@ -163,7 +147,7 @@
   </div>
 
   <!-- Scripts -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) {

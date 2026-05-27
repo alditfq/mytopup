@@ -8,26 +8,35 @@ use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Promo;
-use App\Models\Setting;
-use App\Models\MarqueeItem;
-use App\Models\Faq;
-use App\Models\Testimonial;
 use App\Models\Review;
-use App\Models\ChatConversation;
-use App\Models\ChatMessage;
+use App\Models\GameAccount;
+use App\Services\FulfillmentService;
+use App\Http\Requests\StoreGameRequest;
+use App\Http\Requests\UpdateGameRequest;
+use App\Http\Requests\StoreAccountRequest;
+use App\Http\Requests\UpdateAccountRequest;
+use App\Http\Requests\DeliverAccountRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AccountDeliveryMail;
 
 class AdminController extends Controller
 {
+    protected $fulfillmentService;
+
+    public function __construct(FulfillmentService $fulfillmentService)
+    {
+        $this->fulfillmentService = $fulfillmentService;
+    }
     public function index()
     {
-        $totalRevenue        = Transaction::where('status', 'success')->sum('total_payment');
+        $totalRevenue        = Transaction::whereIn('status', ['success', 'delivered'])->sum('total_payment');
         $totalTransactions   = Transaction::count();
         $totalUsers          = User::count();
-        $pendingTransactions = Transaction::where('status', 'pending')->count();
-        $successTransactions = Transaction::where('status', 'success')->count();
+        $pendingTransactions = Transaction::whereIn('status', ['pending', 'waiting_delivery'])->count();
+        $successTransactions = Transaction::whereIn('status', ['success', 'delivered'])->count();
         $failedTransactions  = Transaction::where('status', 'failed')->count();
 
         $transactions = Transaction::with(['game', 'nominal', 'paymentMethod'])
@@ -36,7 +45,7 @@ class AdminController extends Controller
             ->get();
 
         $popularGames = Transaction::selectRaw('game_id, COUNT(*) as sales_count, SUM(total_payment) as revenue')
-            ->where('status', 'success')
+            ->whereIn('status', ['success', 'delivered'])
             ->groupBy('game_id')
             ->with('game')
             ->orderBy('sales_count', 'desc')
@@ -52,7 +61,7 @@ class AdminController extends Controller
             $date  = now()->subDays($i)->format('Y-m-d');
             $label = now()->subDays($i)->locale('id')->isoFormat('ddd D/M');
 
-            $rev = Transaction::where('status', 'success')
+            $rev = Transaction::whereIn('status', ['success', 'delivered'])
                 ->whereDate('created_at', $date)
                 ->sum('total_payment');
 
@@ -108,23 +117,33 @@ class AdminController extends Controller
 
     public function updateTransactionStatus(Request $request, $id)
     {
+        $transaction = Transaction::findOrFail($id);
+
+        // Tentukan status yang diizinkan berdasarkan tipe transaksi
+        if ($transaction->game_account_id) {
+            // Pembelian akun game: status 'success' tidak berlaku
+            $allowed = ['pending', 'waiting_delivery', 'delivered', 'failed'];
+        } else {
+            // Topup item biasa: 'waiting_delivery' dan 'delivered' tidak berlaku
+            $allowed = ['pending', 'success', 'failed'];
+        }
+
         $request->validate([
-            'status' => 'required|in:success,failed,pending'
+            'status' => ['required', 'in:' . implode(',', $allowed)],
         ]);
 
-        $transaction = Transaction::findOrFail($id);
         $oldStatus = $transaction->status;
         $transaction->status = $request->status;
 
         $logs = $transaction->status_logs;
         $logs[] = [
-            'time' => date('H:i'),
-            'message' => 'Status pesanan diubah oleh Admin dari ' . strtoupper($oldStatus) . ' menjadi ' . strtoupper($request->status) . '.'
+            'time'    => date('H:i'),
+            'message' => 'Status pesanan diubah oleh Admin dari ' . strtoupper($oldStatus) . ' menjadi ' . strtoupper($request->status) . '.',
         ];
         $transaction->status_logs = $logs;
         $transaction->save();
 
-        return back()->with('success', 'Status transaksi #' . $transaction->invoice . ' berhasil diperbarui menjadi ' . $request->status);
+        return back()->with('success', 'Status transaksi #' . $transaction->invoice . ' berhasil diperbarui menjadi ' . strtoupper($request->status) . '.');
     }
 
     // ==========================================
@@ -150,19 +169,9 @@ class AdminController extends Controller
         return view('admin.games', compact('games'));
     }
 
-    public function storeGame(Request $request)
+    public function storeGame(StoreGameRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string',
-            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'banner' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'developer' => 'required|string',
-            'id_label' => 'required|string',
-            'zone_id_label' => 'nullable|string',
-            'id_helper_text' => 'required|string',
-            'cashback_percent' => 'required|integer|min:0|max:100',
-        ]);
+        $validated = $request->validated();
 
         $thumbnailUrl = '';
         if ($request->hasFile('thumbnail')) {
@@ -180,39 +189,28 @@ class AdminController extends Controller
             $bannerUrl = '/uploads/games/' . $fileName;
         }
 
-        $slug = Str::slug($request->name);
+        $slug = Str::slug($validated['name']);
 
         Game::create([
             'slug' => $slug,
-            'name' => $request->name,
-            'category' => $request->category,
+            'name' => $validated['name'],
+            'category' => $validated['category'],
             'thumbnail_url' => $thumbnailUrl,
             'banner_url' => $bannerUrl,
-            'developer' => $request->developer,
-            'id_label' => $request->id_label,
-            'zone_id_label' => $request->zone_id_label,
-            'id_helper_text' => $request->id_helper_text,
-            'cashback_percent' => $request->cashback_percent,
+            'developer' => $validated['developer'],
+            'id_label' => $validated['id_label'],
+            'zone_id_label' => $validated['zone_id_label'] ?? null,
+            'id_helper_text' => $validated['id_helper_text'],
+            'cashback_percent' => $validated['cashback_percent'],
             'has_discount' => false
         ]);
 
         return back()->with('success', 'Game baru berhasil ditambahkan!');
     }
 
-    public function updateGame(Request $request, $id)
+    public function updateGame(UpdateGameRequest $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'developer' => 'required|string',
-            'id_label' => 'required|string',
-            'zone_id_label' => 'nullable|string',
-            'id_helper_text' => 'required|string',
-            'cashback_percent' => 'required|integer|min:0|max:100',
-        ]);
-
+        $validated = $request->validated();
         $game = Game::findOrFail($id);
 
         $thumbnailUrl = $game->thumbnail_url;
@@ -232,16 +230,16 @@ class AdminController extends Controller
         }
 
         $game->update([
-            'slug' => Str::slug($request->name),
-            'name' => $request->name,
-            'category' => $request->category,
+            'slug' => Str::slug($validated['name']),
+            'name' => $validated['name'],
+            'category' => $validated['category'],
             'thumbnail_url' => $thumbnailUrl,
             'banner_url' => $bannerUrl,
-            'developer' => $request->developer,
-            'id_label' => $request->id_label,
-            'zone_id_label' => $request->zone_id_label,
-            'id_helper_text' => $request->id_helper_text,
-            'cashback_percent' => $request->cashback_percent,
+            'developer' => $validated['developer'],
+            'id_label' => $validated['id_label'],
+            'zone_id_label' => $validated['zone_id_label'] ?? null,
+            'id_helper_text' => $validated['id_helper_text'],
+            'cashback_percent' => $validated['cashback_percent'],
         ]);
 
         return back()->with('success', 'Data game ' . $game->name . ' berhasil diperbarui!');
@@ -481,34 +479,6 @@ class AdminController extends Controller
         return view('admin.users', compact('users'));
     }
 
-    public function toggleUserSuspend($id)
-    {
-        $user = User::findOrFail($id);
-        
-        if ($user->role === 'admin') {
-            return back()->with('error', 'Anda tidak dapat menangguhkan sesama akun Admin!');
-        }
-
-        $user->is_suspended = !$user->is_suspended;
-        $user->save();
-
-        $status = $user->is_suspended ? 'ditangguhkan (SUSPENDED)' : 'diaktifkan kembali (ACTIVE)';
-        return back()->with('success', 'Akun ' . $user->name . ' berhasil ' . $status . '!');
-    }
-
-    public function resetUserPassword(Request $request, $id)
-    {
-        $request->validate([
-            'password' => 'required|string|min:6|confirmed'
-        ]);
-
-        $user = User::findOrFail($id);
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return back()->with('success', 'Kata sandi untuk ' . $user->name . ' berhasil disetel ulang!');
-    }
-
     // ==========================================
     // PROMOS CRUD
     // ==========================================
@@ -619,53 +589,6 @@ class AdminController extends Controller
     }
 
     // ==========================================
-    // SETTINGS & CONFIGURATIONS
-    // ==========================================
-    public function settings()
-    {
-        $shopName = Setting::getVal('shop_name', 'GameTopup');
-        $logoUrl = Setting::getVal('logo_url', '');
-        $marqueeText = Setting::getVal('marquee_text', '');
-        $flashSaleEnd = Setting::getVal('flash_sale_end', '');
-        $isMaintenance = Setting::getVal('is_maintenance', 'false');
-
-        return view('admin.settings', compact('shopName', 'logoUrl', 'marqueeText', 'flashSaleEnd', 'isMaintenance'));
-    }
-
-    public function updateSettings(Request $request)
-    {
-        $request->validate([
-            'shop_name' => 'required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'marquee_text' => 'nullable|string',
-            'flash_sale_end' => 'nullable|date_format:Y-m-d\TH:i',
-            'is_maintenance' => 'required|in:true,false'
-        ]);
-
-        Setting::setVal('shop_name', $request->shop_name);
-        
-        $logoUrl = Setting::getVal('logo_url', '');
-        if ($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            $fileName = time() . '_logo_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/settings'), $fileName);
-            $logoUrl = '/uploads/settings/' . $fileName;
-        }
-        Setting::setVal('logo_url', $logoUrl);
-        
-        Setting::setVal('marquee_text', $request->marquee_text ?? '');
-        
-        if ($request->flash_sale_end) {
-            $dateTime = date('Y-m-d H:i:s', strtotime($request->flash_sale_end));
-            Setting::setVal('flash_sale_end', $dateTime);
-        }
-
-        Setting::setVal('is_maintenance', $request->is_maintenance);
-
-        return back()->with('success', 'Konfigurasi sistem berhasil diperbarui!');
-    }
-
-    // ==========================================
     // ANALYTICS & CSV REPORTS
     // ==========================================
     public function reports()
@@ -729,63 +652,12 @@ class AdminController extends Controller
         ));
     }
 
-    public function exportReport()
-    {
-        $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=rekap-transaksi-" . date('Ymd') . ".csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
-
-        $transactions = Transaction::with(['game', 'user', 'paymentMethod'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $callback = function() use($transactions) {
-            $file = fopen('php://output', 'w');
-            
-            fputcsv($file, [
-                'Invoice', 
-                'Nama Game', 
-                'Nominal Diamond/Item', 
-                'Target Player ID', 
-                'Zone/Server ID', 
-                'Total Pembayaran (IDR)', 
-                'Saluran Pembayaran', 
-                'Nama Akun Pembeli', 
-                'Status Transaksi', 
-                'Tanggal'
-            ]);
-
-            foreach ($transactions as $tx) {
-                fputcsv($file, [
-                    $tx->invoice,
-                    $tx->game->name,
-                    $tx->nominal_name,
-                    $tx->target_id,
-                    $tx->zone_id ?? '-',
-                    $tx->total_payment,
-                    $tx->paymentMethod->name,
-                    $tx->user ? $tx->user->name : ($tx->nickname ?? 'Guest Customer'),
-                    strtoupper($tx->status),
-                    $tx->created_at->format('Y-m-d H:i')
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
-
     // ==========================================
     // TRANSACTION AUDITING DETAILS
     // ==========================================
     public function transactionDetail($id)
     {
-        $tx = Transaction::with(['game', 'nominal', 'paymentMethod', 'user'])
+        $tx = Transaction::with(['game', 'nominal', 'paymentMethod', 'user', 'gameAccount'])
             ->findOrFail($id);
 
         return view('admin.transaction_detail', compact('tx'));
@@ -828,448 +700,208 @@ class AdminController extends Controller
 
         $tx->status = 'failed';
 
+        $logs = $tx->status_logs;
+        $logs[] = [
+            'time' => date('H:i'),
+            'message' => 'Admin secara manual melakukan pembatalan dan refund dana transaksi (REFUNDED). Status diubah menjadi FAILED.'
+        ];
         $tx->status_logs = $logs;
         $tx->save();
 
         return back()->with('success', 'Pesanan #' . $tx->invoice . ' berhasil dibatalkan dan direfund! Status diubah menjadi FAILED.');
     }
 
-    // ==========================================
-    // FAQ CRUD MANAGEMENT
-    // ==========================================
-    public function faqs(Request $request)
+    public function deliverAccount(DeliverAccountRequest $request, $id)
     {
-        $query = Faq::query();
+        $tx = Transaction::with(['game', 'user', 'gameAccount'])->findOrFail($id);
+
+        if (!$tx->game_account_id) {
+            return back()->with('error', 'Transaksi ini bukan pembelian akun game!');
+        }
+
+        if ($tx->status === 'delivered') {
+            return back()->with('error', 'Akun game untuk pesanan ini sudah terkirim!');
+        }
+
+        $validated = $request->validated();
+
+        try {
+            $this->fulfillmentService->deliverAccount(
+                $tx,
+                $validated['account_email'],
+                $validated['account_password'],
+                $validated['notes'] ?? null,
+                auth()->user()->name ?? 'Admin'
+            );
+
+            return back()->with('success', 'Kredensial akun game berhasil dikirim ke email pembeli! Status transaksi diubah menjadi DELIVERED.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengirimkan email: ' . $e->getMessage());
+        }
+    }
+
+    // ==========================================
+    // GAME ACCOUNTS CRUD
+    // ==========================================
+    public function accounts(Request $request)
+    {
+        $query = GameAccount::query()->with('game');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('question', 'like', "%{$search}%")
-                  ->orWhere('answer', 'like', "%{$search}%");
-            });
+            $query->where('title', 'like', "%{$search}%");
         }
 
-        if ($request->filled('category') && $request->category !== 'all') {
-            $query->where('category', $request->category);
+        if ($request->filled('game_id') && $request->game_id !== 'all') {
+            $query->where('game_id', $request->game_id);
         }
 
-        $faqs = $query->orderBy('sort_order', 'asc')->get();
-        return view('admin.faqs', compact('faqs'));
+        $accounts = $query->orderBy('created_at', 'desc')->get();
+        $games = Game::all();
+
+        return view('admin.accounts', compact('accounts', 'games'));
     }
 
-    public function storeFaq(Request $request)
+    public function storeAccount(StoreAccountRequest $request)
     {
-        $request->validate([
-            'category' => 'required|string|in:General,Payment,Refund,Account,Promotion,Technical',
-            'question' => 'required|string',
-            'answer' => 'required|string',
-            'sort_order' => 'required|integer|min:0'
-        ]);
+        $validated = $request->validated();
 
-        Faq::create([
-            'category' => strtolower($request->category),
-            'slug' => Str::slug($request->question),
-            'question' => $request->question,
-            'answer' => $request->answer,
-            'sort_order' => $request->sort_order,
-            'is_active' => true
-        ]);
-
-        return back()->with('success', 'FAQ baru berhasil ditambahkan!');
-    }
-
-    public function updateFaq(Request $request, $id)
-    {
-        $request->validate([
-            'category' => 'required|string|in:General,Payment,Refund,Account,Promotion,Technical',
-            'question' => 'required|string',
-            'answer' => 'required|string',
-            'sort_order' => 'required|integer|min:0'
-        ]);
-
-        $faq = Faq::findOrFail($id);
-        $faq->update([
-            'category' => strtolower($request->category),
-            'slug' => Str::slug($request->question),
-            'question' => $request->question,
-            'answer' => $request->answer,
-            'sort_order' => $request->sort_order
-        ]);
-
-        return back()->with('success', 'FAQ berhasil diperbarui!');
-    }
-
-    public function deleteFaq($id)
-    {
-        $faq = Faq::findOrFail($id);
-        $faq->delete();
-
-        return back()->with('success', 'FAQ berhasil dihapus!');
-    }
-
-    public function toggleFaq($id)
-    {
-        $faq = Faq::findOrFail($id);
-        $faq->is_active = !$faq->is_active;
-        $faq->save();
-
-        $status = $faq->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return back()->with('success', 'FAQ berhasil ' . $status . '!');
-    }
-
-    // ==========================================
-    // TESTIMONIAL CRUD MANAGEMENT
-    // ==========================================
-    public function testimonials(Request $request)
-    {
-        $query = Testimonial::query();
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('game_name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('filter') && $request->filter !== 'all') {
-            if ($request->filter === 'approved') {
-                $query->where('is_approved', true);
-            } elseif ($request->filter === 'pending') {
-                $query->where('is_approved', false);
-            } elseif ($request->filter === 'featured') {
-                $query->where('is_featured', true);
+        $uploadedImages = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $fileName = time() . '_acc_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/accounts'), $fileName);
+                $uploadedImages[] = '/uploads/accounts/' . $fileName;
             }
         }
 
-        $testimonials = $query->orderBy('created_at', 'desc')->get();
-        return view('admin.testimonials', compact('testimonials'));
-    }
+        $slug = Str::slug($validated['title']) . '-' . Str::random(5);
 
-    public function storeTestimonial(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|string|max:255',
-            'game_name' => 'required|string|max:255',
-            'message' => 'required|string',
-            'rating' => 'required|integer|min:1|max:5',
-            'avatar_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+        GameAccount::create([
+            'game_id'      => $validated['game_id'],
+            'title'        => $validated['title'],
+            'slug'         => $slug,
+            'description'  => $validated['description'] ?? null,
+            'rank'         => $validated['rank'],
+            'level'        => $validated['level'],
+            'skin_count'   => $validated['skin_count'],
+            'login_method' => $validated['login_method'],
+            'bind_status'  => $validated['bind_status'],
+            'price'        => $validated['price'],
+            'images'       => $uploadedImages,
+            'account_data' => $validated['account_data'],
+            'status'       => 'available',
+            'featured'     => $request->has('featured') ? true : false,
         ]);
 
-        $avatarUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&q=80';
-        if ($request->hasFile('avatar_file')) {
-            $file = $request->file('avatar_file');
-            $fileName = time() . '_avatar_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/avatars'), $fileName);
-            $avatarUrl = '/uploads/avatars/' . $fileName;
-        }
-
-        Testimonial::create([
-            'user_id' => null,
-            'username' => $request->username,
-            'game_name' => $request->game_name,
-            'message' => $request->message,
-            'rating' => $request->rating,
-            'avatar' => $avatarUrl,
-            'is_approved' => true,
-            'is_featured' => false
-        ]);
-
-        return back()->with('success', 'Testimonial baru berhasil ditambahkan!');
+        return back()->with('success', 'Akun game baru berhasil dipublikasikan!');
     }
 
-    public function updateTestimonial(Request $request, $id)
+    public function updateAccount(UpdateAccountRequest $request, $id)
     {
-        $request->validate([
-            'username' => 'required|string|max:255',
-            'game_name' => 'required|string|max:255',
-            'message' => 'required|string',
-            'rating' => 'required|integer|min:1|max:5',
-            'avatar_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
-        ]);
+        $validated = $request->validated();
+        $account = GameAccount::findOrFail($id);
 
-        $testimonial = Testimonial::findOrFail($id);
-        
-        $avatarUrl = $testimonial->avatar;
-        if ($request->hasFile('avatar_file')) {
-            $file = $request->file('avatar_file');
-            $fileName = time() . '_avatar_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/avatars'), $fileName);
-            $avatarUrl = '/uploads/avatars/' . $fileName;
-        }
-
-        $testimonial->update([
-            'username' => $request->username,
-            'game_name' => $request->game_name,
-            'message' => $request->message,
-            'rating' => $request->rating,
-            'avatar' => $avatarUrl
-        ]);
-
-        return back()->with('success', 'Testimonial berhasil diperbarui!');
-    }
-
-    public function deleteTestimonial($id)
-    {
-        $testimonial = Testimonial::findOrFail($id);
-        $testimonial->delete();
-
-        return back()->with('success', 'Testimonial berhasil dihapus!');
-    }
-
-    public function toggleTestimonialApprove($id)
-    {
-        $testimonial = Testimonial::findOrFail($id);
-        $testimonial->is_approved = !$testimonial->is_approved;
-        $testimonial->save();
-
-        $status = $testimonial->is_approved ? 'disetujui (APPROVED)' : 'ditolak (PENDING)';
-        return back()->with('success', 'Testimonial berhasil ' . $status . '!');
-    }
-
-    public function toggleTestimonialFeatured($id)
-    {
-        $testimonial = Testimonial::findOrFail($id);
-        $testimonial->is_featured = !$testimonial->is_featured;
-        $testimonial->save();
-
-        $status = $testimonial->is_featured ? 'dijadikan unggulan (FEATURED)' : 'dihapus dari unggulan';
-        return back()->with('success', 'Testimonial berhasil ' . $status . '!');
-    }
-
-    // ==========================================
-    // SUPPORT LIVE CHAT DASHBOARD
-    // ==========================================
-    public function chatDashboard()
-    {
-        return view('admin.chat');
-    }
-
-    public function chatConversations()
-    {
-        $conversations = ChatConversation::with(['user', 'messages'])
-            ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(function($c) {
-                $latestMsgObj = $c->messages->sortByDesc('created_at')->first();
-                $c->latest_message = $latestMsgObj ? $latestMsgObj->message : 'Belum ada pesan.';
-                $c->latest_message_time = $latestMsgObj ? $latestMsgObj->created_at->format('H:i') : '';
-                $c->unread_count = $c->messages->where('sender_type', 'customer')->where('is_read', false)->count();
-                return $c;
-            });
-
-        return response()->json($conversations);
-    }
-
-    public function chatMessages($conversationId)
-    {
-        $conversation = ChatConversation::with('user')->findOrFail($conversationId);
-        
-        if (!$conversation->assigned_admin_id) {
-            $conversation->assigned_admin_id = auth()->id();
-            $conversation->save();
-        }
-
-        $messages = ChatMessage::where('conversation_id', $conversationId)
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        ChatMessage::where('conversation_id', $conversationId)
-            ->where('sender_type', 'customer')
-            ->update(['is_read' => true]);
-
-        $txHistory = [];
-        if ($conversation->user_id) {
-            $txHistory = Transaction::where('user_id', $conversation->user_id)
-                ->with('game')
-                ->orderBy('created_at', 'desc')
-                ->take(5)
-                ->get();
-        } else {
-            $txHistory = Transaction::where('nickname', 'like', "%{$conversation->guest_name}%")
-                ->with('game')
-                ->orderBy('created_at', 'desc')
-                ->take(5)
-                ->get();
-        }
-
-        return response()->json([
-            'conversation' => $conversation,
-            'messages' => $messages,
-            'tx_history' => $txHistory
-        ]);
-    }
-
-    public function sendSupportMessage(Request $request)
-    {
-        $request->validate([
-            'conversation_id' => 'required|exists:chat_conversations,id',
-            'message' => 'required|string'
-        ]);
-
-        $msg = ChatMessage::create([
-            'conversation_id' => $request->conversation_id,
-            'sender_type' => 'admin',
-            'sender_id' => auth()->id(),
-            'message' => $request->message,
-            'is_read' => false
-        ]);
-
-        $conversation = ChatConversation::findOrFail($request->conversation_id);
-        $conversation->touch();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $msg
-        ]);
-    }
-
-    public function closeConversation($conversationId)
-    {
-        $conversation = ChatConversation::findOrFail($conversationId);
-        $conversation->status = 'closed';
-        $conversation->save();
-
-        return response()->json([
-            'status' => 'success'
-        ]);
-    }
-
-    // ==========================================
-    // MARQUEE MANAGEMENT (Multi-Item)
-    // ==========================================
-    public function marquee()
-    {
-        $marqueeActive = Setting::getVal('marquee_active', 'true');
-        $items = MarqueeItem::orderBy('sort_order')->orderBy('id')->get();
-
-        return view('admin.marquee', compact('marqueeActive', 'items'));
-    }
-
-    public function updateMarquee(Request $request)
-    {
-        $request->validate([
-            'marquee_active' => 'required|in:true,false',
-        ]);
-
-        Setting::setVal('marquee_active', $request->marquee_active);
-
-        return back()->with('success', 'Status marquee berhasil diperbarui!');
-    }
-
-    public function storeMarqueeItem(Request $request)
-    {
-        $request->validate([
-            'text' => 'required|string|max:500',
-        ]);
-
-        $maxOrder = MarqueeItem::max('sort_order') ?? 0;
-
-        MarqueeItem::create([
-            'text'       => $request->text,
-            'is_active'  => true,
-            'sort_order' => $maxOrder + 1,
-        ]);
-
-        return back()->with('success', 'Item marquee baru berhasil ditambahkan!');
-    }
-
-    public function toggleMarqueeItem($id)
-    {
-        $item = MarqueeItem::findOrFail($id);
-        $item->is_active = !$item->is_active;
-        $item->save();
-
-        $status = $item->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return back()->with('success', 'Item marquee berhasil ' . $status . '!');
-    }
-
-    public function deleteMarqueeItem($id)
-    {
-        $item = MarqueeItem::findOrFail($id);
-        $item->delete();
-
-        return back()->with('success', 'Item marquee berhasil dihapus!');
-    }
-
-    public function sortMarqueeItem(Request $request, $id)
-    {
-        $request->validate(['direction' => 'required|in:up,down']);
-
-        $item = MarqueeItem::findOrFail($id);
-
-        if ($request->direction === 'up') {
-            $swap = MarqueeItem::where('sort_order', '<', $item->sort_order)
-                ->orderBy('sort_order', 'desc')->first();
-        } else {
-            $swap = MarqueeItem::where('sort_order', '>', $item->sort_order)
-                ->orderBy('sort_order', 'asc')->first();
-        }
-
-        if ($swap) {
-            [$item->sort_order, $swap->sort_order] = [$swap->sort_order, $item->sort_order];
-            $item->save();
-            $swap->save();
-        }
-
-        return back()->with('success', 'Urutan marquee berhasil diubah!');
-    }
-
-    // ==========================================
-    // USER REVIEW MODERATION
-    // ==========================================
-    public function reviews(Request $request)
-    {
-        $query = Review::with(['game', 'transaction', 'user'])->orderBy('created_at', 'desc');
-
-        if ($request->filled('filter')) {
-            if ($request->filter === 'promoted') {
-                $query->where('is_promoted', true);
-            } elseif ($request->filter === 'pending') {
-                $query->where('is_promoted', false);
+        $uploadedImages = $account->images;
+        if ($request->hasFile('images')) {
+            $uploadedImages = [];
+            foreach ($request->file('images') as $file) {
+                $fileName = time() . '_acc_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/accounts'), $fileName);
+                $uploadedImages[] = '/uploads/accounts/' . $fileName;
             }
         }
 
-        $reviews = $query->get();
-        return view('admin.reviews', compact('reviews'));
-    }
-
-    public function promoteReview($id)
-    {
-        $review = Review::with(['game', 'user'])->findOrFail($id);
-
-        if ($review->is_promoted) {
-            return back()->with('error', 'Review ini sudah dipromosikan menjadi testimonial!');
-        }
-
-        // Get user avatar if available
-        $avatar = $review->user
-            ? ($review->user->avatar ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&q=80')
-            : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&q=80';
-
-        Testimonial::create([
-            'user_id'     => $review->user_id,
-            'username'    => $review->reviewer_name,
-            'avatar'      => $avatar,
-            'game_name'   => $review->game->name,
-            'message'     => $review->message ?? 'Pelayanan top up sangat cepat dan memuaskan!',
-            'rating'      => $review->rating,
-            'is_approved' => true,
-            'is_featured' => false,
+        $account->update([
+            'game_id'      => $validated['game_id'],
+            'title'        => $validated['title'],
+            'slug'         => Str::slug($validated['title']) . '-' . Str::random(3),
+            'description'  => $validated['description'] ?? null,
+            'rank'         => $validated['rank'],
+            'level'        => $validated['level'],
+            'skin_count'   => $validated['skin_count'],
+            'login_method' => $validated['login_method'],
+            'bind_status'  => $validated['bind_status'],
+            'price'        => $validated['price'],
+            'images'       => $uploadedImages,
+            'account_data' => $validated['account_data'],
+            'featured'     => $request->has('featured') ? true : false,
         ]);
 
-        $review->is_promoted = true;
-        $review->save();
-
-        return back()->with('success', 'Review dari ' . $review->reviewer_name . ' berhasil dijadikan testimonial!');
+        return back()->with('success', 'Akun game ' . $account->title . ' berhasil diperbarui!');
     }
 
-    public function deleteReview($id)
+    public function deleteAccount($id)
     {
-        $review = Review::findOrFail($id);
-        $review->delete();
+        $account = GameAccount::findOrFail($id);
+        $account->delete();
 
-        return back()->with('success', 'Review berhasil dihapus!');
+        return back()->with('success', 'Akun game berhasil dihapus dari marketplace!');
     }
+
+    public function toggleAccount(Request $request, $id)
+    {
+        $account = GameAccount::findOrFail($id);
+        
+        if ($request->type === 'featured') {
+            $account->featured = !$account->featured;
+            $account->save();
+            $msg = 'Status unggulan (featured) akun ' . ($account->featured ? 'diaktifkan' : 'dinonaktifkan') . '.';
+        } else {
+            $account->status = ($account->status === 'available') ? 'sold' : 'available';
+            $account->save();
+            $msg = 'Status penjualan akun diubah menjadi ' . strtoupper($account->status) . '.';
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    public function flashSale()
+    {
+        $flashSaleShow = \App\Models\Setting::getVal('flash_sale_show', 'true');
+        $flashSaleTitle = \App\Models\Setting::getVal('flash_sale_title', 'Sabet Diskon Game Terpopuler Akhir Pekan');
+        $flashSaleDescription = \App\Models\Setting::getVal('flash_sale_description', 'Diamond, token, dan Welkin Moon ready diskon kilat, instan terkirim secara otomatis.');
+        $flashSaleSlug = \App\Models\Setting::getVal('flash_sale_slug', 'mobile-legends');
+        $flashSaleButtonText = \App\Models\Setting::getVal('flash_sale_button_text', 'Cek Flash Sale MLBB');
+        
+        // Convert 'YYYY-MM-DD HH:MM:SS' format to 'YYYY-MM-DDTHH:MM' for HTML5 datetime-local input
+        $rawEnd = \App\Models\Setting::getVal('flash_sale_end', '');
+        $flashSaleEnd = $rawEnd ? str_replace(' ', 'T', substr($rawEnd, 0, 16)) : '';
+
+        $games = Game::orderBy('name', 'asc')->get();
+
+        return view('admin.flash-sale', compact(
+            'flashSaleShow',
+            'flashSaleTitle',
+            'flashSaleDescription',
+            'flashSaleSlug',
+            'flashSaleButtonText',
+            'flashSaleEnd',
+            'games'
+        ));
+    }
+
+    public function updateFlashSale(Request $request)
+    {
+        $request->validate([
+            'flash_sale_show'        => 'required|in:true,false',
+            'flash_sale_title'       => 'required|string|max:255',
+            'flash_sale_description' => 'required|string',
+            'flash_sale_slug'        => 'required|string|exists:games,slug',
+            'flash_sale_button_text' => 'required|string|max:255',
+            'flash_sale_end'         => 'nullable|string',
+        ]);
+
+        \App\Models\Setting::setVal('flash_sale_show', $request->flash_sale_show);
+        \App\Models\Setting::setVal('flash_sale_title', $request->flash_sale_title);
+        \App\Models\Setting::setVal('flash_sale_description', $request->flash_sale_description);
+        \App\Models\Setting::setVal('flash_sale_slug', $request->flash_sale_slug);
+        \App\Models\Setting::setVal('flash_sale_button_text', $request->flash_sale_button_text);
+        
+        $flashSaleEnd = $request->flash_sale_end ? str_replace('T', ' ', $request->flash_sale_end) : '';
+        \App\Models\Setting::setVal('flash_sale_end', $flashSaleEnd);
+
+        return back()->with('success', 'Konfigurasi Flash Sale berhasil diperbarui!');
+    }
+
 }

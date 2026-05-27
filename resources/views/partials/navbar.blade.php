@@ -27,6 +27,10 @@
         <i data-lucide="gamepad-2" class="h-4 w-4"></i>
         <span>Home</span>
       </a>
+      <a href="{{ route('accounts.index') }}" class="relative flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-all {{ Route::is('accounts.index') || Route::is('accounts.detail') ? 'neup-pressed-sm text-indigo-600 font-extrabold shadow-sm border border-indigo-200/20' : 'neup-flat-sm text-slate-600 hover:neup-pressed-xs hover:text-slate-900' }}">
+        <i data-lucide="key-round" class="h-4 w-4"></i>
+        <span>Beli Akun Game</span>
+      </a>
       <a href="{{ route('status') }}" class="relative flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-all {{ Route::is('status') ? 'neup-pressed-sm text-indigo-600 font-extrabold shadow-sm border border-indigo-200/20' : 'neup-flat-sm text-slate-600 hover:neup-pressed-xs hover:text-slate-900' }}">
         <i data-lucide="clipboard-list" class="h-4 w-4"></i>
         <span id="nav-track-btn">Cek Transaksi</span>
@@ -39,23 +43,6 @@
 
     <!-- Right Menu Desk -->
     <div class="hidden md:flex items-center gap-4">
-      <!-- Language Toggle Dropdown -->
-      <div class="relative">
-        <button id="lang-dropdown-trigger" class="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-black text-slate-600 neup-flat-sm hover:neup-pressed-sm transition-all cursor-pointer">
-          <i data-lucide="globe" class="h-3.5 w-3.5 text-slate-500"></i>
-          <span id="nav-active-lang-text">ID</span>
-          <i data-lucide="chevron-down" class="h-3 w-3 text-slate-500"></i>
-        </button>
-        <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2.5 w-36 overflow-hidden rounded-2xl border border-white/50 p-1.5 neup-flat z-50 bg-white">
-          <button id="lang-btn-id" class="flex w-full items-center px-4 py-2.5 rounded-xl text-left text-xs font-bold hover:neup-pressed-xs">
-            Bahasa (ID)
-          </button>
-          <button id="lang-btn-en" class="flex w-full items-center px-4 py-2.5 rounded-xl text-left text-xs font-bold hover:neup-pressed-xs">
-            English (EN)
-          </button>
-        </div>
-      </div>
-
       <!-- Server-side Dynamic User Profile -->
       @auth
         @php
@@ -140,10 +127,6 @@
 
     <!-- Mobile Drawer Toggles -->
     <div class="flex items-center gap-2.5 md:hidden">
-      <button id="mobile-lang-btn" class="flex items-center justify-center rounded-xl px-3 py-2 text-slate-600 neup-flat-xs hover:neup-pressed-xs">
-        <i data-lucide="globe" class="h-3.5 w-3.5"></i>
-        <span class="ml-1 text-[10px] font-black" id="mobile-lang-text">ID</span>
-      </button>
       <button id="mobile-menu-trigger" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 neup-flat-xs hover:neup-pressed-xs">
         <i data-lucide="menu" id="mobile-menu-icon" class="h-5 w-5"></i>
       </button>
@@ -156,6 +139,10 @@
       <a href="{{ route('home') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-xs font-black transition-all {{ Route::is('home') ? 'neup-pressed-sm text-indigo-600 font-extrabold border border-indigo-200/20' : 'neup-flat-sm text-slate-600 hover:neup-pressed-xs' }}">
         <i data-lucide="gamepad-2" class="h-4.5 w-4.5"></i>
         <span>Home</span>
+      </a>
+      <a href="{{ route('accounts.index') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-xs font-black transition-all {{ Route::is('accounts.index') || Route::is('accounts.detail') ? 'neup-pressed-sm text-indigo-600 font-extrabold border border-indigo-200/20' : 'neup-flat-sm text-slate-600 hover:neup-pressed-xs' }}">
+        <i data-lucide="key-round" class="h-4.5 w-4.5"></i>
+        <span>Beli Akun Game</span>
       </a>
       <a href="{{ route('status') }}" class="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-xs font-black transition-all {{ Route::is('status') ? 'neup-pressed-sm text-indigo-600 font-extrabold border border-indigo-200/20' : 'neup-flat-sm text-slate-600 hover:neup-pressed-xs' }}">
         <i data-lucide="clipboard-list" class="h-4.5 w-4.5"></i>
@@ -223,29 +210,12 @@
         userTrigger.addEventListener('click', (e) => {
           e.stopPropagation();
           userMenu.classList.toggle('hidden');
-          // Close lang menu if open
-          const langMenu = document.getElementById('lang-dropdown-menu');
-          if (langMenu) langMenu.classList.add('hidden');
-        });
-      }
-
-      // Lang Menu Dropdown Toggle
-      const langTrigger = document.getElementById('lang-dropdown-trigger');
-      const langMenu = document.getElementById('lang-dropdown-menu');
-      if (langTrigger && langMenu) {
-        langTrigger.addEventListener('click', (e) => {
-          e.stopPropagation();
-          langMenu.classList.toggle('hidden');
-          // Close user menu if open
-          const userMenu = document.getElementById('user-dropdown-menu');
-          if (userMenu) userMenu.classList.add('hidden');
         });
       }
 
       // Global click to close dropdowns
       document.addEventListener('click', () => {
         if (userMenu) userMenu.classList.add('hidden');
-        if (langMenu) langMenu.classList.add('hidden');
       });
 
       // Mobile Menu Drawer Toggle (Fallback)

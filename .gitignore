@@ -21,3 +21,30 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Development files
+/scratch
+/INCOMPLETE_FEATURES_AUDIT.md
+/PRODUCTION_CLEANUP.md
+/REQUIREMENT_VALIDATION.md
+
+# Database
+/database/database.sqlite
+
+# Logs
+/storage/logs/*.log
+
+# Compiled views
+/storage/framework/views/*.php
+
+# Sessions
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+
+# Cache
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+
+# Uploads (optional - uncomment if you don't want to push uploads)
+# /public/uploads/*
+# !/public/uploads/.gitignore

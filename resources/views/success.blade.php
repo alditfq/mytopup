@@ -34,52 +34,110 @@
           </div>
           <div class="flex items-center gap-2.5 text-slate-750">
             <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white font-black text-[9px] shadow-sm flex-shrink-0">✓</span>
-            <span>Item game berhasil dikirim ke ID: <strong id="success-target-id-string" class="font-mono text-slate-900">{{ $transaction->target_id }}</strong></span>
+            @if($transaction->game_account_id)
+              <span>Akun game berhasil dialokasikan untuk Anda!</span>
+            @else
+              <span>Item game berhasil dikirim ke ID: <strong id="success-target-id-string" class="font-mono text-slate-900">{{ $transaction->target_id }}</strong></span>
+            @endif
           </div>
         </div>
       </div>
+
+      <!-- REVEAL ENCRYPTED CREDENTIALS CARD -->
+      @if($transaction->game_account_id && $transaction->gameAccount)
+        @if($transaction->status === 'waiting_delivery')
+          <!-- Waiting Delivery Status -->
+          <div class="mt-6 rounded-3xl border-2 border-dashed border-amber-500 bg-amber-50/50 p-6 text-left max-w-md mx-auto mb-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="h-6 w-6 rounded-lg text-white font-black text-[10px] flex items-center justify-center bg-amber-500 shadow-xs animate-pulse">
+                <i data-lucide="clock" class="h-3.5 w-3.5 text-white"></i>
+              </span>
+              <h3 class="text-xs font-black text-amber-800 uppercase tracking-wider">Menunggu Pengiriman Akun</h3>
+            </div>
+            <p class="text-xs text-slate-700 font-bold leading-relaxed mb-1">
+              Pembayaran Anda sukses terverifikasi! Saat ini admin kami sedang memproses data kredensial login akun game Anda.
+                    <p class="text-[10px] text-slate-500 font-semibold leading-relaxed">
+              Detail username, password, dan catatan login akan segera dikirimkan secara langsung ke email tujuan Anda: <strong class="text-slate-800 font-bold">{{ $transaction->target_id }}</strong>. Harap periksa inbox/spam email Anda secara berkala dalam 5-10 menit.
+            </p>
+          </div>
+        @elseif($transaction->status === 'delivered')
+          <!-- Delivered Status -->
+          <div class="mt-6 rounded-3xl border-2 border-dashed border-emerald-500 bg-emerald-50/50 p-6 text-left max-w-md mx-auto mb-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="h-6 w-6 rounded-lg text-white font-black text-[10px] flex items-center justify-center bg-emerald-50 shadow-xs">
+                <i data-lucide="check-circle" class="h-3.5 w-3.5 text-white"></i>
+              </span>
+              <h3 class="text-xs font-black text-emerald-800 uppercase tracking-wider">Akun Game Telah Dikirim!</h3>
+            </div>
+            <p class="text-xs text-slate-700 font-bold leading-relaxed mb-2">
+              Kredensial login akun game pembelian Anda telah sukses dikirim ke email tujuan Anda: <strong class="text-slate-800 font-bold">{{ $transaction->target_id }}</strong>.
+            </p>
+            <div class="bg-white/80 rounded-2xl p-3.5 border border-emerald-100 text-[10px] font-semibold text-slate-650 leading-relaxed mb-2">
+              <div class="flex justify-between mb-1.5">
+                <span>Waktu Pengiriman:</span>
+                <span class="font-mono text-slate-900 font-black">{{ $transaction->delivered_at ? $transaction->delivered_at->format('d M Y, H:i') . ' WIB' : '-' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Pengirim:</span>
+                <span class="text-slate-900 font-black">{{ $transaction->delivered_by ?? 'System Admin' }}</span>
+              </div>
+            </div>
+            <p class="text-[9px] text-amber-700 font-bold">
+              ⚠️ PENTING: Harap segera periksa email Anda, lakukan login ke dalam game, dan ganti password default demi alasan keamanan!
+            </p>
+          </div>
+        @endif
+      @endif
 
       <!-- RECEIPT CARD -->
       <div class="mt-6 rounded-3xl border border-white/50 neup-flat p-5 md:p-6 text-left max-w-md mx-auto mb-6 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-slate-300/50 pb-3.5 mb-4">
           <span class="flex items-center gap-2 text-xs font-black text-slate-800">
             <i data-lucide="receipt" class="h-4.5 w-4.5 text-slate-400"></i>
-            Resi / Bukti Top Up
+            Resi / Bukti Belanja
           </span>
-          <span class="rounded-full bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 text-[8px] font-black text-emerald-600 uppercase tracking-wider">
-            BERHASIL (PAID)
-          </span>
+          @if($transaction->status === 'waiting_delivery')
+            <span class="rounded-full bg-amber-500/10 border border-amber-500/15 px-2.5 py-0.5 text-[8px] font-black text-amber-600 uppercase tracking-wider animate-pulse">
+              MENUNGGU PENGIRIMAN
+            </span>
+          @elseif($transaction->status === 'delivered')
+            <span class="rounded-full bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 text-[8px] font-black text-emerald-600 uppercase tracking-wider">
+              AKUN TERKIRIM
+            </span>
+          @else
+            <span class="rounded-full bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 text-[8px] font-black text-emerald-600 uppercase tracking-wider">
+              BERHASIL (PAID)
+            </span>
+          @endif
         </div>
 
         <div class="space-y-4 text-xs font-bold text-slate-500">
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span>No. Invois</span>
             <span id="success-receipt-invoice" class="text-slate-800 font-mono text-xs">{{ $transaction->invoice }}</span>
           </div>
 
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span>Nama Game</span>
             <span id="success-receipt-game" class="text-slate-800">{{ $transaction->game->name }}</span>
           </div>
 
-          <div class="flex justify-between">
-            <span>Target Player ID</span>
-            <span id="success-receipt-player-id" class="text-slate-800 font-mono">
-              {{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}
-            </span>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+            <span>{{ $transaction->game_account_id ? 'Email Penerima Akun' : 'Target Player ID' }}</span>
+            <span id="success-receipt-player-id" class="text-slate-800 font-mono text-left sm:text-right break-all">{{ $transaction->target_id }}{{ $transaction->zone_id ? ' (' . $transaction->zone_id . ')' : '' }}</span>
           </div>
 
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span>Nickname Terverifikasi</span>
             <span id="success-receipt-nickname" class="text-slate-800 font-extrabold">{{ $transaction->nickname }}</span>
           </div>
 
-          <div class="flex justify-between">
-            <span>Spesifikasi Item</span>
-            <span id="success-receipt-item" class="text-fuchsia-600 font-extrabold">{{ $transaction->nominal_name }}</span>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+            <span class="flex-shrink-0">Spesifikasi Item</span>
+            <span id="success-receipt-item" class="text-fuchsia-600 font-extrabold text-left sm:text-right break-words">{{ $transaction->nominal_name }}</span>
           </div>
 
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span>Metode Pembayaran</span>
             <span id="success-receipt-payment" class="text-slate-800">{{ $transaction->paymentMethod->name }}</span>
           </div>
@@ -185,30 +243,18 @@
         <h3 class="text-xs font-black tracking-widest text-slate-400 uppercase mb-6 text-center">Top Up Game Populer Lainnya</h3>
         
         <div id="success-recs-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="neup-flat border border-white/50 p-3 rounded-2xl cursor-pointer hover:neup-pressed-xs" onclick="window.location.href='/game/mobile-legends'">
-            <div class="h-20 rounded-xl bg-slate-100 overflow-hidden mb-2">
-              <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&q=85" class="h-full w-full object-cover">
+          @forelse($recommendedGames as $game)
+            <div class="neup-flat border border-white/50 p-3 rounded-2xl cursor-pointer hover:neup-pressed-xs" onclick="window.location.href='{{ route('game.detail', $game->slug) }}'">
+              <div class="h-20 rounded-xl bg-slate-100 overflow-hidden mb-2">
+                <img src="{{ $game->thumbnail_url }}" alt="{{ $game->name }}" class="h-full w-full object-cover">
+              </div>
+              <p class="text-[10px] font-black text-slate-700 leading-tight m-0 text-left truncate">{{ $game->name }}</p>
             </div>
-            <p class="text-[10px] font-black text-slate-700 leading-tight m-0 text-left truncate">Mobile Legends</p>
-          </div>
-          <div class="neup-flat border border-white/50 p-3 rounded-2xl cursor-pointer hover:neup-pressed-xs" onclick="window.location.href='/game/free-fire'">
-            <div class="h-20 rounded-xl bg-slate-100 overflow-hidden mb-2">
-              <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200&q=85" class="h-full w-full object-cover">
+          @empty
+            <div class="col-span-full py-6 text-center text-slate-400 font-bold text-xs">
+              Belum ada game populer lainnya.
             </div>
-            <p class="text-[10px] font-black text-slate-700 leading-tight m-0 text-left truncate">Free Fire</p>
-          </div>
-          <div class="neup-flat border border-white/50 p-3 rounded-2xl cursor-pointer hover:neup-pressed-xs" onclick="window.location.href='/game/pubg-mobile'">
-            <div class="h-20 rounded-xl bg-slate-100 overflow-hidden mb-2">
-              <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&q=85" class="h-full w-full object-cover">
-            </div>
-            <p class="text-[10px] font-black text-slate-700 leading-tight m-0 text-left truncate">PUBG Mobile</p>
-          </div>
-          <div class="neup-flat border border-white/50 p-3 rounded-2xl cursor-pointer hover:neup-pressed-xs" onclick="window.location.href='/game/valorant'">
-            <div class="h-20 rounded-xl bg-slate-100 overflow-hidden mb-2">
-              <img src="https://images.unsplash.com/photo-1612287230202-1bf1d85d1bdf?w=200&q=85" class="h-full w-full object-cover">
-            </div>
-            <p class="text-[10px] font-black text-slate-700 leading-tight m-0 text-left truncate">Valorant</p>
-          </div>
+          @endforelse
         </div>
       </div>
 

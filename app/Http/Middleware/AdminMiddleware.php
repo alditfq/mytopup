@@ -16,8 +16,24 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->role === 'admin') {
-            return $next($request);
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            if ($user->role === 'admin') {
+                // Block suspended admin accounts
+                if ($user->is_suspended) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return redirect()->route('admin.login')
+                        ->with('error', 'Akun Admin Anda telah ditangguhkan. Hubungi superadmin untuk informasi lebih lanjut.');
+                }
+
+                return $next($request);
+            }
+
+            abort(403, 'Unauthorized action.');
         }
 
         return redirect()->route('admin.login')->with('error', 'Silakan masuk menggunakan akun kredensial Admin Anda.');

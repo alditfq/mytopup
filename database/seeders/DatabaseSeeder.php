@@ -7,9 +7,8 @@ use App\Models\Game;
 use App\Models\Nominal;
 use App\Models\PaymentMethod;
 use App\Models\Promo;
-use App\Models\Faq;
-use App\Models\Testimonial;
 use App\Models\Transaction;
+use App\Models\GameAccount;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,44 +20,33 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Seed Users
-        $alex = User::create([
-            'name' => 'Alex Cahya',
-            'email' => 'alex.cahya@gmail.com',
+        $user = User::create([
+            'name' => 'Demo User',
+            'email' => 'user@demo.com',
             'phone' => '081234567890',
-            'balance' => 145000,
-            'cashback_saved' => 15500,
-            'role' => 'user',
-            'password' => Hash::make('alex123'),
-        ]);
-
-        $budi = User::create([
-            'name' => 'Budi Susanto (Suspended)',
-            'email' => 'budi.susanto@gmail.com',
-            'phone' => '082222222222',
             'balance' => 0,
             'cashback_saved' => 0,
             'role' => 'user',
-            'is_suspended' => true,
-            'password' => Hash::make('budi123'),
+            'password' => Hash::make('password'),
         ]);
 
         $admin = User::create([
-            'name' => 'Admin GameTopup',
-            'email' => 'admin@gametopup.com',
+            'name' => 'Admin',
+            'email' => 'admin@demo.com',
             'phone' => '081111111111',
-            'balance' => 9999999,
+            'balance' => 0,
             'cashback_saved' => 0,
             'role' => 'admin',
-            'password' => Hash::make('admin123'),
+            'password' => Hash::make('password'),
         ]);
 
         // 1.5 Seed system configurations
-        \App\Models\Setting::create(['key' => 'shop_name', 'value' => 'GameTopup']);
+        \App\Models\Setting::create(['key' => 'shop_name', 'value' => 'MyTopup']);
         \App\Models\Setting::create(['key' => 'logo_url', 'value' => '']);
-        \App\Models\Setting::create(['key' => 'marquee_text', 'value' => '🔥 Dapatkan Potongan Diskon s/d 15 Ribu dan Cashback Instant 10% Khusus Akhir Pekan! Buruan Top-Up! 🔥']);
+        \App\Models\Setting::create(['key' => 'marquee_text', 'value' => '']);
         \App\Models\Setting::create(['key' => 'flash_sale_end', 'value' => date('Y-m-d H:i:s', strtotime('+2 days'))]);
         \App\Models\Setting::create(['key' => 'is_maintenance', 'value' => 'false']);
-        \App\Models\Setting::create(['key' => 'marquee_active', 'value' => 'true']);
+        \App\Models\Setting::create(['key' => 'marquee_active', 'value' => 'false']);
 
         // 2. Seed Games and Nominals
         $gamesData = [
@@ -344,191 +332,73 @@ class DatabaseSeeder extends Seeder
         // 4. Seed Promos
         $promosData = [
             [
-                'title' => 'Kejutan Cashback 10% Semua Game!',
+                'title' => 'Promo Spesial Top Up Game',
                 'image' => 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
-                'code' => 'CSHBKNEW',
-                'description' => 'Dapatkan cashback langsung hingga Rp 25.000 untuk transaksi pertama menggunakan kode promo ini.',
-                'discount_amount' => 25000,
-                'min_transaction' => 30000,
+                'code' => 'WELCOME10',
+                'description' => 'Dapatkan diskon untuk transaksi pertama Anda.',
+                'discount_amount' => 10000,
+                'min_transaction' => 50000,
                 'discount_type' => 'nominal',
                 'expiry_date' => date('Y-m-d H:i:s', strtotime('+30 days')),
                 'max_uses' => 100,
-                'uses_count' => 5,
+                'uses_count' => 0,
                 'is_active' => true,
                 'claim_url' => '/game/mobile-legends'
-            ],
-            [
-                'title' => 'Diskon Akhir Pekan Hemat s/d 15 Ribu!',
-                'image' => 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&q=80',
-                'code' => 'WEEKENDGAMER',
-                'description' => 'Nikmati potongan harga langsung Rp 15.000 khusus transaksi di hari Sabtu & Minggu.',
-                'discount_amount' => 15000,
-                'min_transaction' => 50000,
-                'discount_type' => 'nominal',
-                'expiry_date' => date('Y-m-d H:i:s', strtotime('+15 days')),
-                'max_uses' => 50,
-                'uses_count' => 12,
-                'is_active' => true,
-                'claim_url' => '/game/genshin-impact'
-            ],
-            [
-                'title' => 'Event Spektakuler Garena Unlimted!',
-                'image' => 'https://images.unsplash.com/photo-1612287230202-1bf1d85d1bdf?w=800&q=80',
-                'code' => 'GARENASPEKTA',
-                'description' => 'Potongan harga Rp 10.000 untuk pengisian Free Fire & Call of Duty Mobile.',
-                'discount_amount' => 10000,
-                'min_transaction' => 20000,
-                'discount_type' => 'nominal',
-                'expiry_date' => date('Y-m-d H:i:s', strtotime('+5 days')),
-                'max_uses' => 10,
-                'uses_count' => 3,
-                'is_active' => true,
-                'claim_url' => '/game/free-fire'
             ]
         ];
-
 
         foreach ($promosData as $promo) {
             Promo::create($promo);
         }
 
-        // 5. Seed FAQs
-        $faqsData = [
-            [
-                'category' => 'general',
-                'slug' => 'bagaimana-cara-melakukan-top-up',
-                'question' => 'Bagaimana cara melakukan top up di GameTopup?',
-                'answer' => 'Cukup pilih game yang ingin Anda top up, masukkan User ID & Zone ID (jika ada), pilih jumlah nominal item yang diinginkan, pilih metode pembayaran, masukkan kode voucher promo jika ada, dan klik Beli Sekarang. Lakukan pembayaran sesuai petunjuk pembayaran.',
-                'is_active' => true,
-                'sort_order' => 1
-            ],
-            [
-                'category' => 'general',
-                'slug' => 'berapa-lama-proses-pengisian',
-                'question' => 'Berapa lama proses pengisian diamond/item game?',
-                'answer' => 'Hampir seluruh transaksi kami diselesaikan secara otomatis dalam waktu 1-3 menit setelah pembayaran Anda berhasil didepositkan. Jika ada antrian server game, proses terkadang dapat membutuhkan waktu hingga 15 menit.',
-                'is_active' => true,
-                'sort_order' => 2
-            ],
-            [
-                'category' => 'payment',
-                'slug' => 'metode-pembayaran-apa-saja',
-                'question' => 'Metode pembayaran apa saja yang didukung?',
-                'answer' => 'Kami mendukung berbagai pilihan metode pembayaran instan populer di Indonesia, meliputi E-Wallet (DANA, OVO, ShopeePay), QRIS Kode Standar nasional Indonesia, dan Virtual Account Transfer bank utama (BCA, Mandiri, BNI, BRI).',
-                'is_active' => true,
-                'sort_order' => 3
-            ],
-            [
-                'category' => 'payment',
-                'slug' => 'apakah-ada-tambahan-biaya-admin',
-                'question' => 'Apakah ada tambahan biaya admin?',
-                'answer' => 'Kami menerapkan biaya admin yang transparan dan sangat minim. Untuk QRIS gratis biaya admin, OVO dikenakan Rp 200, dan Transfer Virtual Account bank dikenakan Rp 1.000 per transaksi.',
-                'is_active' => true,
-                'sort_order' => 4
-            ],
-            [
-                'category' => 'refund',
-                'slug' => 'dapatkah-saya-membatalkan-transaksi',
-                'question' => 'Dapatkah saya membatalkan atau me-refund transaksi?',
-                'answer' => 'Transaksi game top-up bersifat final dan langsung diproses secara otomatis setelah pembayaran terdeteksi. Silakan periksa kembali kecocokan User ID dan server Anda sebelum membuat pesanan, karena transaksi yang salah kirim akibat kesalahan input User ID tidak dapat dikembalikan atau di-refund.',
-                'is_active' => true,
-                'sort_order' => 5
-            ]
-        ];
+        // 7. Seed Transactions - Empty for clean production demo
 
-        foreach ($faqsData as $faq) {
-            Faq::create($faq);
+        // 8. Seed Game Accounts
+        $ml = Game::where('slug', 'mobile-legends')->first();
+        $pubg = Game::where('slug', 'pubg-mobile')->first();
+
+        if ($ml) {
+            GameAccount::create([
+                'game_id' => $ml->id,
+                'title' => 'Mobile Legends Mythical Glory - 150+ Skins',
+                'slug' => 'mobile-legends-mythical-glory-150-skins',
+                'description' => "Akun Mobile Legends premium:\n- Rank: Mythical Glory\n- 150+ Skins (Epic, Special, Elite)\n- All Heroes Unlocked\n- Emblem Level Max\n- Win Rate 65%+\n- Login aman via Moonton ID",
+                'rank' => 'Mythical Glory',
+                'level' => 75,
+                'skin_count' => 150,
+                'login_method' => 'Moonton ID',
+                'bind_status' => 'Clean Unbind',
+                'price' => 650000,
+                'images' => [
+                    'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
+                    'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80'
+                ],
+                'account_data' => encrypt("Email: account@example.com\nPassword: SecurePass123\nRecovery: recovery@example.com"),
+                'status' => 'available',
+                'featured' => true
+            ]);
         }
 
-        // 6. Seed Testimonials
-        $testimonialsData = [
-            [
-                'user_id' => $alex->id,
-                'username' => 'Rian Hidayat',
-                'avatar' => 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&q=80',
-                'game_name' => 'Mobile Legends',
-                'message' => 'Baru pertama kali coba top up weekly pass di sini, kaget langsung masuk dalam waktu kurang dari 30 detik! Murah banget lagi dibanding lapak sebelah.',
-                'rating' => 5,
-                'is_approved' => true,
-                'is_featured' => true
-            ],
-            [
-                'user_id' => null,
-                'username' => 'Siti Sarah',
-                'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&q=80',
-                'game_name' => 'Valorant',
-                'message' => 'Sangat recommended buat beli Valorant Points. CS ramah dan ketika ada kendala saat sistem maintain, langsung ditangani di live chat dengan sigap. Bintang 5 pokoknya.',
-                'rating' => 5,
-                'is_approved' => true,
-                'is_featured' => true
-            ],
-            [
-                'user_id' => null,
-                'username' => 'Kevin Wijaya',
-                'avatar' => 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop&q=80',
-                'game_name' => 'Genshin Impact',
-                'message' => 'Top up Blessing dapet diskon gila pake kode WEEKENDGAMER. Terpercaya, terbukti aman anti minus crystals. Sukses terus!',
-                'rating' => 5,
-                'is_approved' => true,
-                'is_featured' => true
-            ]
-        ];
-
-        foreach ($testimonialsData as $testi) {
-            Testimonial::create($testi);
+        if ($pubg) {
+            GameAccount::create([
+                'game_id' => $pubg->id,
+                'title' => 'PUBG Mobile Conqueror - Premium Skins',
+                'slug' => 'pubg-mobile-conqueror-premium-skins',
+                'description' => "Akun PUBG Mobile premium:\n- Rank: Conqueror\n- M416 Glacier Skin\n- Pharaoh Set\n- 80+ Weapon Skins\n- Level 80+\n- Login via Facebook",
+                'rank' => 'Conqueror',
+                'level' => 82,
+                'skin_count' => 85,
+                'login_method' => 'Facebook',
+                'bind_status' => 'Single Bind',
+                'price' => 950000,
+                'images' => [
+                    'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80',
+                    'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&q=80'
+                ],
+                'account_data' => encrypt("Facebook: account@example.com\nPassword: SecurePass123\n2FA Code: XXXX-XXXX-XXXX"),
+                'status' => 'available',
+                'featured' => true
+            ]);
         }
-
-        // 7. Seed Transactions
-        $mlGame = Game::where('slug', 'mobile-legends')->first();
-        $mlNominal = Nominal::where('game_id', $mlGame->id)->where('item_id', 'ml-86')->first();
-        $ffGame = Game::where('slug', 'free-fire')->first();
-        $ffNominal = Nominal::where('game_id', $ffGame->id)->where('item_id', 'ff-140')->first();
-
-        $dana = PaymentMethod::where('slug', 'dana')->first();
-        $qris = PaymentMethod::where('slug', 'qris')->first();
-
-        Transaction::create([
-            'invoice' => 'INV-20260520-FF91',
-            'game_id' => $ffGame->id,
-            'user_id' => $alex->id,
-            'nickname' => 'GarenaSlayer',
-            'target_id' => '928532918',
-            'zone_id' => null,
-            'nominal_id' => $ffNominal->id,
-            'nominal_name' => $ffNominal->name,
-            'nominal_price' => $ffNominal->price,
-            'discount_applied' => 3500,
-            'payment_method_id' => $dana->id,
-            'total_payment' => 21500,
-            'status' => 'success',
-            'status_logs' => [
-                ['time' => '14:22', 'message' => 'Invoice berhasil dibuat, menunggu pembayaran di DANA.'],
-                ['time' => '14:23', 'message' => 'Pembayaran diterima oleh sistem.'],
-                ['time' => '14:23', 'message' => 'Diamonds sedang dikirimkan ke Player ID 928532918.'],
-                ['time' => '14:24', 'message' => 'Transaksi berhasil diselesaikan.']
-            ]
-        ]);
-
-        Transaction::create([
-            'invoice' => 'INV-20260523-ML32',
-            'game_id' => $mlGame->id,
-            'user_id' => $alex->id,
-            'nickname' => 'ProSavage99',
-            'target_id' => '88162534',
-            'zone_id' => '2105',
-            'nominal_id' => $mlNominal->id,
-            'nominal_name' => $mlNominal->name,
-            'nominal_price' => $mlNominal->price,
-            'discount_applied' => 3000,
-            'payment_method_id' => $qris->id,
-            'total_payment' => 22000,
-            'status' => 'success',
-            'status_logs' => [
-                ['time' => '09:15', 'message' => 'Pesanan dibuat. QR Code diunduh.'],
-                ['time' => '09:16', 'message' => 'Pembayaran diselesaikan via bca-mobile.'],
-                ['time' => '09:17', 'message' => 'Pengisian diamonds sukses diselesaikan.']
-            ],
-            'qr_code_url' => 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=INV-20260523-ML32'
-        ]);
     }
 }

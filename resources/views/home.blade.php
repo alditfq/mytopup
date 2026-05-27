@@ -224,6 +224,19 @@
     position: relative !important;
     width: 100% !important;
   }
+
+  /* Announcement Bar Marquee */
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 25s linear infinite;
+    will-change: transform;
+  }
 </style>
 @endpush
 
@@ -231,24 +244,12 @@
   <div class="flex-1 pb-16" id="landing-page">
     
     <!-- 1. ANNOUNCEMENT & PROMO MARQUEE -->
-    @if($marqueeActive !== 'false')
+    @if($shopName && !empty(trim($shopName)))
     <section class="bg-gradient-to-r from-cyan-500 via-indigo-600 to-fuchsia-600 py-2.5 text-white overflow-hidden text-xs font-semibold shadow-sm">
       <div class="flex animate-marquee items-center whitespace-nowrap" id="announcement-marquee">
-        @if($marqueeItems->isNotEmpty())
-          @foreach($marqueeItems as $mItem)
-            <span class="px-8">{{ $mItem->text }}</span>
-            <span class="opacity-50">•</span>
-          @endforeach
-          {{-- Duplicate for seamless loop --}}
-          @foreach($marqueeItems as $mItem)
-            <span class="px-8">{{ $mItem->text }}</span>
-            <span class="opacity-50">•</span>
-          @endforeach
-        @else
-          <span class="px-8">🚀 Selamat Datang di {{ $shopName }}! Top up diamonds & game voucher tercepat, termurah, dan terpercaya otomatis 24 jam! 🚀</span>
-          <span class="px-8 opacity-50">•</span>
-          <span class="px-8">🚀 Selamat Datang di {{ $shopName }}! Top up diamonds & game voucher tercepat, termurah, dan terpercaya otomatis 24 jam! 🚀</span>
-        @endif
+        <span class="px-8">🎮 Selamat datang di {{ $shopName }} - Platform top up game terpercaya 🎮</span>
+        <span class="px-8 opacity-50">•</span>
+        <span class="px-8">🎮 Selamat datang di {{ $shopName }} - Platform top up game terpercaya 🎮</span>
       </div>
     </section>
     @endif
@@ -301,6 +302,7 @@
       </div>
 
       <!-- 2. FLASH SALE BANNER & LIVE COUNTDOWN -->
+      @if($flashSaleShow === 'true')
       <div id="homepage-flash-sale-card" class="mt-8 overflow-hidden rounded-3xl p-6 md:p-8 text-white relative neup-dark-flat border border-slate-800 shadow-xl">
         <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none flash-sale-flame-container">
           <i data-lucide="flame" class="h-44 w-44 text-[#ff007f] animate-pulse"></i>
@@ -314,8 +316,8 @@
               </span>
               <span class="text-xs font-black text-[#ff007f] uppercase tracking-widest text-neon-pink">Flash Sale Kilat!</span>
             </div>
-            <h3 class="mt-2.5 text-xl md:text-2xl font-black text-slate-100 tracking-tight">Sabet Diskon Game Terpopuler Akhir Pekan</h3>
-            <p class="mt-1 text-xs text-slate-400">Diamond, token, dan Welkin Moon ready diskon kilat, instan terkirim secara otomatis.</p>
+            <h3 class="mt-2.5 text-xl md:text-2xl font-black text-slate-100 tracking-tight">{{ $flashSaleTitle }}</h3>
+            <p class="mt-1 text-xs text-slate-400">{{ $flashSaleDescription }}</p>
             
             <div class="mt-5 flex items-center gap-3">
               <span class="text-xs text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
@@ -331,11 +333,13 @@
             </div>
           </div>
 
-          <a href="{{ route('game.detail', 'mobile-legends') }}" class="text-white font-extrabold text-xs tracking-wide px-6 py-3.5 rounded-xl neup-orange-flat hover:neup-orange-pressed active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer decoration-none">
-            Cek Flash Sale MLBB <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          <a href="{{ route('game.detail', $flashSaleSlug) }}" id="flash-sale-action-btn" class="text-white font-extrabold text-xs tracking-wide px-6 py-3.5 rounded-xl neup-orange-flat hover:neup-orange-pressed active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer decoration-none">
+            {{ $flashSaleButtonText }} <i data-lucide="arrow-right" class="h-4 w-4"></i>
           </a>
         </div>
       </div>
+      @endif
+
 
       <!-- 3. SEARCH & CATEGORIES -->
       <div class="mt-12">
@@ -407,6 +411,90 @@
         </div>
       </div>
 
+      <!-- 4.5 FEATURED GAME ACCOUNTS SECTION -->
+      @if(isset($featuredAccounts) && count($featuredAccounts) > 0)
+        <section class="mt-16 text-left">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div class="flex items-center gap-2">
+              <span class="h-7 w-7 rounded-lg text-white font-black text-xs flex items-center justify-center neup-orange-flat shadow-sm flex-shrink-0"><i data-lucide="key-round" class="h-4 w-4"></i></span>
+              <div>
+                <h3 class="text-sm md:text-base font-black text-slate-800">Koleksi Akun Game Pilihan</h3>
+                <p class="text-[10px] text-slate-400 font-bold mt-0.5">Beli akun game premium dengan jaminan aman & garansi instan.</p>
+              </div>
+            </div>
+            <a href="{{ route('accounts.index') }}" class="text-[10px] font-black text-indigo-600 bg-white border border-white/40 rounded-xl px-4 py-2.5 cursor-pointer neup-flat-sm hover:neup-pressed-xs decoration-none w-fit">
+              Lihat Semua Akun
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 text-left">
+            @foreach($featuredAccounts as $account)
+              <div onclick="window.location.href='{{ route('accounts.detail', $account->slug) }}'" class="group relative rounded-3xl border border-white/50 neup-flat p-4.5 bg-white cursor-pointer select-none flex flex-col justify-between hover:neup-pressed-xs active:scale-[0.98]">
+                
+                <!-- Account Badge Featured/Tag -->
+                @if($account->featured)
+                  <div class="absolute top-3 right-3 z-10 scale-90 select-none pointer-events-none">
+                    <span class="bg-amber-500 text-white text-[8px] font-black px-2 py-0.8 rounded-lg uppercase tracking-wider shadow-sm flex items-center gap-0.5"><i data-lucide="star" class="h-3 w-3 fill-white"></i> HOT</span>
+                  </div>
+                @endif
+
+                <div>
+                  <!-- Account Image Banner Thumbnail -->
+                  <div class="relative aspect-video w-full overflow-hidden rounded-2xl bg-slate-100 shadow-inner">
+                    @if($account->images && count($account->images) > 0)
+                      <img src="{{ $account->images[0] }}" alt="{{ $account->title }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    @else
+                      <div class="h-full w-full flex items-center justify-center font-black text-slate-300">Gambar Galeri</div>
+                    @endif
+                  </div>
+
+                  <!-- Specs details -->
+                  <div class="mt-3.5">
+                    <!-- Game Name Badge Above Title -->
+                    <span class="inline-block text-[8px] font-black uppercase text-indigo-600 bg-indigo-50 border border-indigo-100/35 px-2 py-0.5 rounded mb-1.5">
+                      {{ $account->game->name }}
+                    </span>
+                    
+                    <!-- Headline Account Title -->
+                    <h3 class="text-xs md:text-sm font-black text-slate-800 leading-snug line-clamp-2 h-9 text-left group-hover:text-indigo-600 transition-colors" title="{{ $account->title }}">
+                      {{ $account->title }}
+                    </h3>
+                    
+                    <!-- Spec Flow Mini-Badges -->
+                    <div class="mt-3.5 flex flex-wrap gap-1.5 text-[9px] font-extrabold text-slate-500">
+                      <span class="px-2 py-0.8 rounded-lg bg-slate-50 border border-slate-150 text-slate-600 flex items-center gap-1" title="Rank Account">
+                        <i data-lucide="award" class="h-3 w-3 text-indigo-500"></i>
+                        <span>{{ $account->rank }}</span>
+                      </span>
+                      <span class="px-2 py-0.8 rounded-lg bg-slate-50 border border-slate-150 text-slate-600 flex items-center gap-1" title="Skin Count">
+                        <i data-lucide="palette" class="h-3 w-3 text-pink-500"></i>
+                        <span>{{ $account->skin_count }} Skins</span>
+                      </span>
+                      <span class="px-2 py-0.8 rounded-lg bg-slate-50 border border-slate-150 text-slate-600 flex items-center gap-1" title="Bind Status">
+                        <i data-lucide="shield-alert" class="h-3 w-3 text-emerald-500"></i>
+                        <span class="truncate max-w-[70px]">{{ $account->bind_status }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Price and CTA -->
+                <div class="mt-4.5 border-t border-slate-200/50 pt-3 flex items-center justify-between">
+                  <div class="flex flex-col">
+                    <span class="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none">Harga Jual</span>
+                    <span class="text-xs md:text-sm font-black text-[#ff007f] font-mono mt-1">Rp {{ number_format($account->price, 0, ',', '.') }}</span>
+                  </div>
+                  <span class="flex h-8 w-8 items-center justify-center rounded-2xl text-white neup-orange-flat group-hover:scale-105 active:scale-95 transition-all shadow-sm">
+                    <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+                  </span>
+                </div>
+
+              </div>
+            @endforeach
+          </div>
+        </section>
+      @endif
+
       <!-- 5. PROMO / PAYMENT DISCOUNTS STATS -->
       <section id="payment-stats-section" class="mt-16 rounded-3xl p-6 md:p-8 neup-flat border border-white/50">
         <div class="flex items-center gap-2 mb-6 text-left">
@@ -439,96 +527,6 @@
         </div>
       </section>
 
-      <!-- 6. TESTIMONIALS SECTION -->
-      <section class="mt-16">
-        @php
-          $getAvatarClass = function($username) {
-              $firstChar = strtoupper(substr($username, 0, 1));
-              $bgColors = [
-                  'A' => 'bg-rose-500 text-rose-50 border-rose-600',
-                  'B' => 'bg-pink-500 text-pink-50 border-pink-600',
-                  'C' => 'bg-fuchsia-500 text-fuchsia-50 border-fuchsia-600',
-                  'D' => 'bg-purple-500 text-purple-50 border-purple-600',
-                  'E' => 'bg-violet-500 text-violet-50 border-violet-600',
-                  'F' => 'bg-indigo-500 text-indigo-50 border-indigo-600',
-                  'G' => 'bg-blue-500 text-blue-50 border-blue-600',
-                  'H' => 'bg-sky-500 text-sky-50 border-sky-600',
-                  'I' => 'bg-cyan-500 text-cyan-50 border-cyan-600',
-                  'J' => 'bg-teal-500 text-teal-50 border-teal-600',
-                  'K' => 'bg-emerald-500 text-emerald-50 border-emerald-600',
-                  'L' => 'bg-green-500 text-green-50 border-green-600',
-                  'M' => 'bg-lime-500 text-lime-50 border-lime-600',
-                  'N' => 'bg-yellow-500 text-yellow-950 border-yellow-600',
-                  'O' => 'bg-amber-500 text-amber-950 border-amber-600',
-                  'P' => 'bg-orange-500 text-orange-50 border-orange-600',
-                  'Q' => 'bg-red-500 text-red-50 border-red-600',
-                  'R' => 'bg-rose-600 text-rose-50 border-rose-700',
-                  'S' => 'bg-pink-600 text-pink-50 border-pink-700',
-                  'T' => 'bg-fuchsia-600 text-fuchsia-50 border-fuchsia-700',
-                  'U' => 'bg-purple-600 text-purple-50 border-purple-700',
-                  'V' => 'bg-violet-600 text-violet-50 border-violet-700',
-                  'W' => 'bg-indigo-600 text-indigo-50 border-indigo-700',
-                  'X' => 'bg-blue-600 text-blue-50 border-blue-700',
-                  'Y' => 'bg-sky-600 text-sky-50 border-sky-700',
-                  'Z' => 'bg-cyan-600 text-cyan-50 border-cyan-700',
-              ];
-              return $bgColors[$firstChar] ?? 'bg-slate-500 text-slate-50 border-slate-600';
-          };
-        @endphp
-
-        <div class="text-center max-w-xl mx-auto">
-          <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Lebih dari 100K Gamer Puas</h3>
-          <p class="text-xs text-slate-500 mt-1 font-bold">Ulasan jujur dari komunitas gamer Indonesia mengenai kecepatan layanan kami.</p>
-        </div>
-
-        <div class="mt-8 overflow-hidden relative w-full py-4" id="testimonials-marquee-container">
-          <!-- Gradient shadows overlay on edges for premium fading effect -->
-          <div class="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
-          <div class="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
-
-          <div class="flex gap-6 animate-testimonial-marquee" id="testimonials-track">
-            @foreach($testimonials as $testi)
-              <div class="homepage-testimonial-card inline-flex flex-col justify-between text-left p-5 rounded-2xl neup-flat border border-white/50 w-[300px] min-w-[300px] shrink-0 whitespace-normal bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300">
-                <p class="text-xs text-slate-600 font-bold leading-relaxed transition-colors duration-300">"{{ $testi->message }}"</p>
-                <div class="mt-4 flex items-center gap-3">
-                  <div class="testimonial-avatar h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm border shadow-sm flex-shrink-0 {{ $getAvatarClass($testi->username) }}">
-                    {{ strtoupper(substr($testi->username, 0, 1)) }}
-                  </div>
-                  <div>
-                    <p class="text-xs font-black text-slate-800">{{ $testi->username }}</p>
-                    <div class="flex items-center gap-1 mt-0.5">
-                      <span class="text-[10px] text-indigo-600 font-extrabold transition-colors duration-300">{{ $testi->game_name }}</span>
-                      <span class="text-[10px] text-slate-400 font-bold">•</span>
-                      <span class="text-[10px] text-amber-500 font-extrabold flex items-center gap-0.5">★ {{ $testi->rating }}.0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            @endforeach
-            
-            {{-- Duplicate for seamless loop --}}
-            @foreach($testimonials as $testi)
-              <div class="homepage-testimonial-card inline-flex flex-col justify-between text-left p-5 rounded-2xl neup-flat border border-white/50 w-[300px] min-w-[300px] shrink-0 whitespace-normal bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300">
-                <p class="text-xs text-slate-600 font-bold leading-relaxed transition-colors duration-300">"{{ $testi->message }}"</p>
-                <div class="mt-4 flex items-center gap-3">
-                  <div class="testimonial-avatar h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm border shadow-sm flex-shrink-0 {{ $getAvatarClass($testi->username) }}">
-                    {{ strtoupper(substr($testi->username, 0, 1)) }}
-                  </div>
-                  <div>
-                    <p class="text-xs font-black text-slate-800">{{ $testi->username }}</p>
-                    <div class="flex items-center gap-1 mt-0.5">
-                      <span class="text-[10px] text-indigo-600 font-extrabold transition-colors duration-300">{{ $testi->game_name }}</span>
-                      <span class="text-[10px] text-slate-400 font-bold">•</span>
-                      <span class="text-[10px] text-amber-500 font-extrabold flex items-center gap-0.5">★ {{ $testi->rating }}.0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            @endforeach
-          </div>
-        </div>
-      </section>
-
       <!-- 7. FAQ ACCORDION SECTION -->
       <section class="mt-16 border-t border-slate-300/40 pt-16">
         <div class="max-w-3xl mx-auto">
@@ -538,17 +536,56 @@
           </div>
 
           <div class="space-y-4" id="faqs-accordion">
-            @foreach($faqs as $idx => $faq)
-              <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
-                <button onclick="toggleFaq({{ $idx }}, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
-                  <span>{{ $faq->question }}</span>
-                  <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
-                </button>
-                <div id="faq-ans-{{ $idx }}" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
-                  {{ $faq->answer }}
-                </div>
+            
+            <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
+              <button onclick="toggleFaq(0, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
+                <span>Bagaimana cara melakukan top up di GameTopup?</span>
+                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
+              </button>
+              <div id="faq-ans-0" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
+                Cukup pilih game yang ingin Anda top up, masukkan User ID & Zone ID (jika ada), pilih jumlah nominal item yang diinginkan, pilih metode pembayaran, masukkan kode voucher promo jika ada, dan klik Beli Sekarang. Lakukan pembayaran sesuai petunjuk pembayaran.
               </div>
-            @endforeach
+            </div>
+
+            <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
+              <button onclick="toggleFaq(1, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
+                <span>Berapa lama proses pengisian diamond/item game?</span>
+                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
+              </button>
+              <div id="faq-ans-1" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
+                Hampir seluruh transaksi kami diselesaikan secara otomatis dalam waktu 1-3 menit setelah pembayaran Anda berhasil didepositkan. Jika ada antrian server game, proses terkadang dapat membutuhkan waktu hingga 15 menit.
+              </div>
+            </div>
+
+            <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
+              <button onclick="toggleFaq(2, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
+                <span>Metode pembayaran apa saja yang didukung?</span>
+                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
+              </button>
+              <div id="faq-ans-2" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
+                Kami mendukung berbagai pilihan metode pembayaran instan populer di Indonesia, meliputi E-Wallet (DANA, OVO, ShopeePay), QRIS Kode Standar nasional Indonesia, dan Virtual Account Transfer bank utama (BCA, Mandiri, BNI, BRI).
+              </div>
+            </div>
+
+            <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
+              <button onclick="toggleFaq(3, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
+                <span>Apakah ada tambahan biaya admin?</span>
+                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
+              </button>
+              <div id="faq-ans-3" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
+                Kami menerapkan biaya admin yang transparan dan sangat minim. Untuk QRIS gratis biaya admin, OVO dikenakan Rp 200, dan Transfer Virtual Account bank dikenakan Rp 1.000 per transaksi.
+              </div>
+            </div>
+
+            <div class="faq-item rounded-2xl neup-flat border border-white/50 overflow-hidden text-left transition-all">
+              <button onclick="toggleFaq(4, this)" class="w-full flex items-center justify-between p-5 text-left border-none bg-transparent cursor-pointer font-black text-xs text-slate-700">
+                <span>Dapatkah saya membatalkan atau me-refund transaksi?</span>
+                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 transition-all dropdown-chevron"></i>
+              </button>
+              <div id="faq-ans-4" class="faq-answer hidden px-5 pb-5 pt-1 text-xs text-slate-500 leading-relaxed font-semibold">
+                Transaksi game top-up bersifat final dan langsung diproses secara otomatis setelah pembayaran terdeteksi. Silakan periksa kembali kecocokan User ID dan server Anda sebelum membuat pesanan, karena transaksi yang salah kirim akibat kesalahan input User ID tidak dapat dikembalikan atau di-refund.
+              </div>
+            </div>
           </div>
         </div>
       </section>

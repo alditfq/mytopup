@@ -37,6 +37,14 @@ class ReviewController extends Controller
             'is_promoted'    => false,
         ]);
 
+        // Recalculate average rating for the game and update
+        $averageRating = Review::where('game_id', $transaction->game_id)->avg('rating');
+        if ($averageRating) {
+            $game = $transaction->game;
+            $game->rating = round($averageRating, 1);
+            $game->save();
+        }
+
         return back()->with('review_success', 'Terima kasih! Ulasan Anda telah berhasil dikirim. 🎉');
     }
 }

@@ -29,4 +29,9 @@ class Game extends Model
     {
         return $this->hasMany(Nominal::class);
     }
+
+    public function gameAccounts()
+    {
+        return $this->hasMany(GameAccount::class);
+    }
 }

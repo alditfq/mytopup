@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\Route;
 // Katalog Beranda & General
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/support', [HomeController::class, 'support'])->name('support');
-Route::post('/support/chat', [HomeController::class, 'sendChatMessage'])->name('support.chat');
-Route::get('/support/chat/messages', [HomeController::class, 'getChatMessages'])->name('support.chat.messages');
+Route::get('/accounts', [HomeController::class, 'accountsIndex'])->name('accounts.index');
+Route::get('/accounts/{slug}', [HomeController::class, 'accountDetail'])->name('accounts.detail');
 
 // Detail Game Checkout
 Route::get('/game/{slug}', [GameController::class, 'show'])->name('game.detail');
-Route::post('/checkout', [TransactionController::class, 'checkout'])->name('checkout');
+Route::post('/checkout', [TransactionController::class, 'checkout'])->name('checkout')->middleware('throttle:5,1');
 
 // Lacak Pesanan
 Route::get('/transaction-status', [TransactionController::class, 'statusPage'])->name('status');
@@ -39,9 +39,9 @@ Route::redirect('/success', '/');
 // Otentikasi (Guest Only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1');
 });
 
 // Otentikasi (Authenticated Member Only)
@@ -54,7 +54,7 @@ Route::middleware('auth')->group(function () {
 
 // Admin Login (General Guest-safe)
 Route::get('/admin/login', [AuthController::class, 'showAdminLogin'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+Route::post('/admin/login', [AuthController::class, 'adminLogin'])->middleware('throttle:5,1');
 
 // Admin Dashboard (Admin Only)
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
@@ -65,12 +65,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/transactions/{id}', [AdminController::class, 'transactionDetail'])->name('admin.transactions.detail');
     Route::post('/transactions/{id}/status', [AdminController::class, 'updateTransactionStatus'])->name('admin.transactions.update-status');
     Route::post('/transactions/{id}/deliver', [AdminController::class, 'deliverTransaction'])->name('admin.transactions.deliver');
+    Route::post('/transactions/{id}/deliver-account', [AdminController::class, 'deliverAccount'])->name('admin.transactions.deliver-account');
     Route::post('/transactions/{id}/refund', [AdminController::class, 'refundTransaction'])->name('admin.transactions.refund');
     
     // Users Management
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
-    Route::post('/users/{id}/toggle-suspend', [AdminController::class, 'toggleUserSuspend'])->name('admin.users.toggle-suspend');
-    Route::post('/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'])->name('admin.users.reset-password');
     
     // Promos CRUD (Extended)
     Route::get('/promos', [AdminController::class, 'promos'])->name('admin.promos');
@@ -97,46 +96,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/payment-methods/{id}/update', [AdminController::class, 'updatePaymentMethod'])->name('admin.payment-methods.update');
     Route::post('/payment-methods/{id}/delete', [AdminController::class, 'deletePaymentMethod'])->name('admin.payment-methods.delete');
     
-    // Settings & Configuration
-    Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
-    Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
-
-    // Marquee Management
-    Route::get('/marquee', [AdminController::class, 'marquee'])->name('admin.marquee');
-    Route::post('/marquee/update', [AdminController::class, 'updateMarquee'])->name('admin.marquee.update');
-    Route::post('/marquee/items', [AdminController::class, 'storeMarqueeItem'])->name('admin.marquee.items.store');
-    Route::post('/marquee/items/{id}/toggle', [AdminController::class, 'toggleMarqueeItem'])->name('admin.marquee.items.toggle');
-    Route::post('/marquee/items/{id}/delete', [AdminController::class, 'deleteMarqueeItem'])->name('admin.marquee.items.delete');
-    Route::post('/marquee/items/{id}/sort', [AdminController::class, 'sortMarqueeItem'])->name('admin.marquee.items.sort');
-    
+    // Game Accounts CRUD
+    Route::get('/accounts', [AdminController::class, 'accounts'])->name('admin.accounts');
+    Route::post('/accounts', [AdminController::class, 'storeAccount'])->name('admin.accounts.store');
+    Route::post('/accounts/{id}/update', [AdminController::class, 'updateAccount'])->name('admin.accounts.update');
+    Route::post('/accounts/{id}/delete', [AdminController::class, 'deleteAccount'])->name('admin.accounts.delete');
+    Route::post('/accounts/{id}/toggle', [AdminController::class, 'toggleAccount'])->name('admin.accounts.toggle');
     // Reports & Charts
     Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
-    Route::get('/reports/export', [AdminController::class, 'exportReport'])->name('admin.reports.export');
 
-    // FAQ Management
-    Route::get('/faqs', [AdminController::class, 'faqs'])->name('admin.faqs');
-    Route::post('/faqs', [AdminController::class, 'storeFaq'])->name('admin.faqs.store');
-    Route::post('/faqs/{id}/update', [AdminController::class, 'updateFaq'])->name('admin.faqs.update');
-    Route::post('/faqs/{id}/delete', [AdminController::class, 'deleteFaq'])->name('admin.faqs.delete');
-    Route::post('/faqs/{id}/toggle', [AdminController::class, 'toggleFaq'])->name('admin.faqs.toggle');
-
-    // Testimonial Management
-    Route::get('/testimonials', [AdminController::class, 'testimonials'])->name('admin.testimonials');
-    Route::post('/testimonials', [AdminController::class, 'storeTestimonial'])->name('admin.testimonials.store');
-    Route::post('/testimonials/{id}/update', [AdminController::class, 'updateTestimonial'])->name('admin.testimonials.update');
-    Route::post('/testimonials/{id}/delete', [AdminController::class, 'deleteTestimonial'])->name('admin.testimonials.delete');
-    Route::post('/testimonials/{id}/toggle-approve', [AdminController::class, 'toggleTestimonialApprove'])->name('admin.testimonials.toggle-approve');
-    Route::post('/testimonials/{id}/toggle-featured', [AdminController::class, 'toggleTestimonialFeatured'])->name('admin.testimonials.toggle-featured');
-
-    // User Review Management
-    Route::get('/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
-    Route::post('/reviews/{id}/promote', [AdminController::class, 'promoteReview'])->name('admin.reviews.promote');
-    Route::post('/reviews/{id}/delete', [AdminController::class, 'deleteReview'])->name('admin.reviews.delete');
-
-    // Live Chat Support Console
-    Route::get('/chat', [AdminController::class, 'chatDashboard'])->name('admin.chat');
-    Route::get('/chat/conversations', [AdminController::class, 'chatConversations'])->name('admin.chat.conversations');
-    Route::get('/chat/messages/{conversationId}', [AdminController::class, 'chatMessages'])->name('admin.chat.messages');
-    Route::post('/chat/send', [AdminController::class, 'sendSupportMessage'])->name('admin.chat.send');
-    Route::post('/chat/close/{conversationId}', [AdminController::class, 'closeConversation'])->name('admin.chat.close');
+    // Flash Sale Management
+    Route::get('/flash-sale', [AdminController::class, 'flashSale'])->name('admin.flash-sale');
+    Route::post('/flash-sale', [AdminController::class, 'updateFlashSale'])->name('admin.flash-sale.update');
 });

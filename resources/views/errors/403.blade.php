@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 — Akses Ditolak | MyTopup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0ff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(239, 68, 68, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(239, 68, 68, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.35;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #ef4444; top: -100px; left: -100px; animation: float 8s ease-in-out infinite; }
+        .orb-2 { width: 300px; height: 300px; background: #f97316; bottom: -80px; right: -80px; animation: float 10s ease-in-out infinite reverse; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, 20px) scale(1.05); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        .error-code {
+            font-size: clamp(6rem, 20vw, 12rem);
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #ef4444, #f97316, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shake 4s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 85%, 100% { transform: none; }
+            87% { transform: translateX(-4px) rotate(-1deg); }
+            89% { transform: translateX(4px) rotate(1deg); }
+            91% { transform: translateX(-2px); }
+            93% { transform: none; }
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fca5a5;
+            margin-bottom: 0.75rem;
+        }
+
+        .error-desc {
+            font-size: 1rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.75rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.05);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-ghost:hover {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: #ef4444;
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            border-radius: 99px;
+            margin: 1.25rem auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <span class="error-icon">🚫</span>
+        <div class="error-code">403</div>
+        <div class="divider"></div>
+        <h1 class="error-title">Akses Ditolak</h1>
+        <p class="error-desc">
+            {{ $exception->getMessage() ?: 'Kamu tidak memiliki izin untuk mengakses area ini.' }}<br>
+            Jika ini adalah kesalahan, silakan hubungi administrator.
+        </p>
+        <div class="btn-group">
+            <a href="{{ url('/') }}" class="btn btn-primary">🏠 Kembali ke Beranda</a>
+            <a href="javascript:history.back()" class="btn btn-ghost">← Halaman Sebelumnya</a>
+        </div>
+    </div>
+</body>
+</html>

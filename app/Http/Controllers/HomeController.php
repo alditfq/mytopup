@@ -4,12 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Game;
 use App\Models\Promo;
-use App\Models\Faq;
-use App\Models\Testimonial;
 use App\Models\Setting;
-use App\Models\MarqueeItem;
-use App\Models\ChatConversation;
-use App\Models\ChatMessage;
+use App\Models\GameAccount;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -19,17 +16,39 @@ class HomeController extends Controller
         $games = Game::with('nominals')->get();
         // Only load active promos on the homepage
         $promos = Promo::where('is_active', true)->get();
-        $faqs = Faq::where('is_active', true)->orderBy('sort_order', 'asc')->get();
-        $testimonials = Testimonial::where('is_approved', true)->where('is_featured', true)->get();
 
         // System configurations
         $shopName = Setting::getVal('shop_name', 'GameTopup');
         $logoUrl = Setting::getVal('logo_url', '');
-        $marqueeActive = Setting::getVal('marquee_active', 'true');
-        $marqueeItems  = MarqueeItem::activeItems();
+        
+        // Flash sale configurations
+        $flashSaleShow = Setting::getVal('flash_sale_show', 'true');
         $flashSaleEnd  = Setting::getVal('flash_sale_end', '');
+        $flashSaleTitle = Setting::getVal('flash_sale_title', 'Sabet Diskon Game Terpopuler Akhir Pekan');
+        $flashSaleDescription = Setting::getVal('flash_sale_description', 'Diamond, token, dan Welkin Moon ready diskon kilat, instan terkirim secara otomatis.');
+        $flashSaleSlug = Setting::getVal('flash_sale_slug', 'mobile-legends');
+        $flashSaleButtonText = Setting::getVal('flash_sale_button_text', 'Cek Flash Sale MLBB');
 
-        return view('home', compact('games', 'promos', 'faqs', 'testimonials', 'shopName', 'logoUrl', 'marqueeActive', 'marqueeItems', 'flashSaleEnd'));
+        // Load featured accounts for homepage bonus
+        $featuredAccounts = GameAccount::with('game')
+            ->where('status', 'available')
+            ->where('featured', true)
+            ->take(4)
+            ->get();
+
+        return view('home', compact(
+            'games', 
+            'promos', 
+            'shopName', 
+            'logoUrl', 
+            'flashSaleShow',
+            'flashSaleEnd', 
+            'flashSaleTitle',
+            'flashSaleDescription',
+            'flashSaleSlug',
+            'flashSaleButtonText',
+            'featuredAccounts'
+        ));
     }
 
     public function support()
@@ -37,75 +56,62 @@ class HomeController extends Controller
         return view('support');
     }
 
-    public function getChatMessages()
+    public function accountsIndex(Request $request)
     {
-        $conversationId = session('chat_conversation_id');
-        if (!$conversationId) {
-            return response()->json(['status' => 'success', 'messages' => []]);
+        $query = GameAccount::with('game')->where('status', 'available');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('game', function ($g) use ($search) {
+                      $g->where('name', 'like', "%{$search}%");
+                  });
+            });
         }
 
-        $messages = ChatMessage::where('conversation_id', $conversationId)
-            ->orderBy('created_at', 'asc')
-            ->get();
+        // Game filter
+        if ($request->filled('game_id') && $request->game_id !== 'all') {
+            $query->where('game_id', $request->game_id);
+        }
 
-        // Mark any admin replies as read
-        ChatMessage::where('conversation_id', $conversationId)
-            ->where('sender_type', 'admin')
-            ->update(['is_read' => true]);
+        // Rank filter
+        if ($request->filled('rank') && $request->rank !== 'all') {
+            $query->where('rank', $request->rank);
+        }
 
-        return response()->json([
-            'status' => 'success',
-            'messages' => $messages
-        ]);
+        // Price Sort
+        if ($request->filled('sort')) {
+            if ($request->sort === 'price_asc') {
+                $query->orderBy('price', 'asc');
+            } elseif ($request->sort === 'price_desc') {
+                $query->orderBy('price', 'desc');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $accounts = $query->get();
+        $games = Game::whereHas('gameAccounts', function($q) {
+            $q->where('status', 'available');
+        })->get();
+        
+        // Get all unique ranks for filter select
+        $ranks = GameAccount::where('status', 'available')->distinct()->pluck('rank')->toArray();
+
+        return view('accounts', compact('accounts', 'games', 'ranks'));
     }
 
-    public function sendChatMessage(Request $request)
+    public function accountDetail($slug)
     {
-        $request->validate([
-            'message' => 'required|string',
-        ]);
+        $account = GameAccount::with('game')->where('slug', $slug)->firstOrFail();
+        $paymentMethods = PaymentMethod::all();
+        $promos = Promo::where('is_active', true)->get();
 
-        // Check if there is an active conversation ID in the session
-        $conversationId = session('chat_conversation_id');
-        $conversation = null;
-
-        if ($conversationId) {
-            $conversation = ChatConversation::find($conversationId);
-            // If the conversation is closed, we will create a new one
-            if ($conversation && $conversation->status === 'closed') {
-                $conversation = null;
-            }
-        }
-
-        if (!$conversation) {
-            // Create a new conversation
-            $user = auth()->user();
-            $guestName = $user ? $user->name : 'Guest Gamer #' . rand(1000, 9999);
-            $guestEmail = $user ? $user->email : null;
-
-            $conversation = ChatConversation::create([
-                'user_id' => $user ? $user->id : null,
-                'guest_name' => $guestName,
-                'guest_email' => $guestEmail,
-                'status' => 'open',
-                'assigned_admin_id' => null
-            ]);
-
-            session(['chat_conversation_id' => $conversation->id]);
-        }
-
-        // Store customer message
-        $chatMessage = ChatMessage::create([
-            'conversation_id' => $conversation->id,
-            'sender_type' => 'customer',
-            'sender_id' => auth()->id(),
-            'message' => $request->message,
-            'is_read' => false
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $chatMessage
-        ]);
+        return view('account_detail', compact('account', 'paymentMethods', 'promos'));
     }
 }

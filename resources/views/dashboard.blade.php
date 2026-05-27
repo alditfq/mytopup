@@ -125,6 +125,10 @@
                         
                         @if($tx->status === 'success')
                           <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block mt-1">✓ PAID</span>
+                        @elseif($tx->status === 'waiting_delivery')
+                          <span class="text-[9px] font-black text-amber-600 uppercase tracking-wider block mt-1 animate-pulse">⏳ PROCESS DELIVERY</span>
+                        @elseif($tx->status === 'delivered')
+                          <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block mt-1">✓ DELIVERED</span>
                         @elseif($tx->status === 'failed')
                           <span class="text-[9px] font-black text-rose-600 uppercase tracking-wider block mt-1">✕ FAILED</span>
                         @else
@@ -157,35 +161,21 @@
               <!-- Grid catalog list -->
               <div class="grid grid-cols-1 gap-3.5" id="dash-fav-games-grid">
                 
-                <div class="neup-pressed-sm p-3.5 rounded-2xl border border-white/40 flex items-center gap-3 cursor-pointer transition-all hover:neup-flat-sm" onclick="window.location.href='/game/mobile-legends'">
-                  <div class="h-10 w-10 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=85" class="h-full w-full object-cover">
+                @forelse($popularGames as $game)
+                  <div class="neup-pressed-sm p-3.5 rounded-2xl border border-white/40 flex items-center gap-3 cursor-pointer transition-all hover:neup-flat-sm" onclick="window.location.href='{{ route('game.detail', $game->slug) }}'">
+                    <div class="h-10 w-10 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0">
+                      <img src="{{ $game->thumbnail_url }}" alt="{{ $game->name }}" class="h-full w-full object-cover">
+                    </div>
+                    <div>
+                      <h5 class="text-xs font-black text-slate-700 m-0">{{ $game->name }}</h5>
+                      <p class="text-[9px] text-slate-400 font-bold m-0 mt-0.5">Top Up {{ $game->category === 'voucher' ? 'Voucher' : 'Diamonds / Item' }}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 class="text-xs font-black text-slate-700 m-0">Mobile Legends</h5>
-                    <p class="text-[9px] text-slate-400 font-bold m-0 mt-0.5">Top Up Diamonds</p>
+                @empty
+                  <div class="py-6 text-center text-slate-400 font-bold text-xs">
+                    Belum ada game terdaftar.
                   </div>
-                </div>
-
-                <div class="neup-pressed-sm p-3.5 rounded-2xl border border-white/40 flex items-center gap-3 cursor-pointer transition-all hover:neup-flat-sm" onclick="window.location.href='/game/free-fire'">
-                  <div class="h-10 w-10 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=100&q=85" class="h-full w-full object-cover">
-                  </div>
-                  <div>
-                    <h5 class="text-xs font-black text-slate-700 m-0">Free Fire</h5>
-                    <p class="text-[9px] text-slate-400 font-bold m-0 mt-0.5">Top Up Diamonds</p>
-                  </div>
-                </div>
-
-                <div class="neup-pressed-sm p-3.5 rounded-2xl border border-white/40 flex items-center gap-3 cursor-pointer transition-all hover:neup-flat-sm" onclick="window.location.href='/game/pubg-mobile'">
-                  <div class="h-10 w-10 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=100&q=85" class="h-full w-full object-cover">
-                  </div>
-                  <div>
-                    <h5 class="text-xs font-black text-slate-700 m-0">PUBG Mobile</h5>
-                    <p class="text-[9px] text-slate-400 font-bold m-0 mt-0.5">Top Up UC Cash</p>
-                  </div>
-                </div>
+                @endforelse
 
               </div>
             </div>

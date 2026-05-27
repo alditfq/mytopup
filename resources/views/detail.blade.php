@@ -16,6 +16,112 @@
     border: 2.5px solid #ff007f !important;
     box-shadow: inset 0 4px 10px rgba(255, 0, 127, 0.08) !important;
   }
+
+  @media (max-width: 1023px) {
+    #game-detail-page {
+      padding-bottom: 9.5rem !important;
+    }
+
+    #checkout-left-panel {
+      position: relative !important;
+      z-index: 9999 !important;
+    }
+
+    #payment-summary-card {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 9999 !important;
+      border-radius: 1.75rem 1.75rem 0 0 !important;
+      margin: 0 !important;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7) !important;
+      border: none !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      padding: 1rem 1.25rem !important;
+      background: #0f1322 !important;
+      transition: all 0.3s ease-in-out !important;
+    }
+
+    /* Hide base h3 header and decorator icon on mobile */
+    #payment-summary-card > h3,
+    #payment-summary-card > .absolute {
+      display: none !important;
+    }
+
+    /* Hide details rows by default on mobile */
+    #payment-summary-card #summary-details-rows {
+      display: none !important;
+    }
+
+    /* Show details when expanded */
+    #payment-summary-card.mobile-expanded #summary-details-rows {
+      display: block !important;
+      margin-bottom: 0.85rem !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      padding-bottom: 0.85rem !important;
+    }
+
+    /* Rotate toggle chevron */
+    #payment-summary-card.mobile-expanded #mobile-summary-chevron {
+      transform: rotate(180deg) !important;
+    }
+
+    /* Rearrange price & button side-by-side */
+    #payment-summary-action-area {
+      border-top: none !important;
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 1.25rem !important;
+    }
+
+    /* Adjust total price text */
+    #payment-summary-total-price-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      flex-shrink: 0 !important;
+    }
+    
+    #payment-summary-total-price-wrapper span.text-xs {
+      font-size: 8px !important;
+      color: #94a3b8 !important;
+      line-height: 1 !important;
+      margin-between: 0 !important;
+      margin-bottom: 0.25rem !important;
+    }
+
+    #summary-total-price {
+      font-size: 1.15rem !important;
+      line-height: 1 !important;
+    }
+
+    /* Buy button width */
+    #btn-buy-now {
+      margin-top: 0 !important;
+      flex: 1 0 auto !important;
+      width: auto !important;
+      min-width: 150px !important;
+      padding: 0.85rem 1.5rem !important;
+      border-radius: 1.25rem !important;
+    }
+
+    /* Make sure validation error banner displays nicely above the sticky bar if triggered */
+    #validation-error-banner {
+      position: absolute !important;
+      bottom: 100% !important;
+      left: 1.25rem !important;
+      right: 1.25rem !important;
+      margin-bottom: 0.5rem !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+      z-index: 10000 !important;
+    }
+  }
 </style>
 @endpush
 
@@ -45,7 +151,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <!-- LEFT PANEL (Game Info + Ringkasan) -->
-          <div class="lg:col-span-1 space-y-6">
+          <div id="checkout-left-panel" class="lg:col-span-1 space-y-6">
             
             <!-- Game Card Description Panel -->
             <div class="overflow-hidden rounded-3xl border border-white/50 p-5 neup-flat bg-white">
@@ -78,55 +184,69 @@
             </div>
 
             <!-- RINGKASAN + ACCORDION — STICKY -->
-            <div style="position: sticky; top: 5rem; display: flex; flex-direction: column; gap: 1.5rem;">
-
-              <!-- RINGKASAN PEMBAYARAN -->
-              <div class="rounded-3xl p-6 neup-dark-flat border border-slate-800 text-slate-100 relative overflow-hidden text-left bg-slate-900 shadow-2xl">
+            <div style="position: sticky; top: 5rem; display: flex; flex-direction: column; gap: 1.5rem;">              <!-- RINGKASAN PEMBAYARAN -->
+              <div id="payment-summary-card" class="rounded-3xl p-6 neup-dark-flat border border-slate-800 text-slate-100 relative overflow-hidden text-left bg-slate-900 shadow-2xl">
                 <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                   <i data-lucide="ticket" class="h-44 w-44 text-fuchsia-500"></i>
                 </div>
                 
                 <h3 class="text-sm font-black text-slate-100 border-b border-slate-800 pb-3 mb-4.5">Ringkasan Pembayaran</h3>
 
-                <div class="space-y-3 text-xs font-bold text-slate-400">
-                  <div class="flex justify-between">
-                    <span>Nama Game</span>
-                    <span id="summary-game-name" class="text-slate-200">{{ $game->name }}</span>
-                  </div>
+                <!-- Mobile Toggle Header (Only visible on mobile) -->
+                <div onclick="toggleMobileSummary()" class="lg:hidden flex items-center justify-between pb-2 mb-2 border-b border-slate-800/60 cursor-pointer select-none">
+                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <i data-lucide="ticket" class="h-3.5 w-3.5 text-fuchsia-500 animate-pulse"></i> Detail Ringkasan
+                  </span>
+                  <i data-lucide="chevron-up" id="mobile-summary-chevron" class="h-4 w-4 text-slate-400 transition-transform duration-300"></i>
+                </div>
+
+                <!-- Mobile container wrapper -->
+                <div id="payment-summary-mobile-flex" class="flex flex-col gap-0">
                   
-                  <div class="flex justify-between">
-                    <span>Target Player / Account ID</span>
-                    <span id="summary-player-id" class="text-slate-205 font-mono">-</span>
+                  <div id="summary-details-rows" class="space-y-3 text-xs font-bold text-slate-400">
+                    <div class="flex justify-between">
+                      <span>Nama Game</span>
+                      <span id="summary-game-name" class="text-slate-200">{{ $game->name }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                      <span>Target Player / Account ID</span>
+                      <span id="summary-player-id" class="text-slate-205 font-mono">-</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                      <span>Item Dipilih</span>
+                      <span id="summary-nominal-item" class="text-slate-205">-</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                      <span>Metode Transaksi</span>
+                      <span id="summary-payment-method" class="text-slate-205">-</span>
+                    </div>
+
+                    <div id="summary-discount-row" class="hidden flex justify-between text-pink-400">
+                      <span>Potongan Promo</span>
+                      <span id="summary-discount-val">-Rp 0</span>
+                    </div>
                   </div>
 
-                  <div class="flex justify-between">
-                    <span>Item Dipilih</span>
-                    <span id="summary-nominal-item" class="text-slate-205">-</span>
-                  </div>
+                  <!-- Flex split wrapper for Mobile Bottom Bar -->
+                  <div id="payment-summary-action-area" class="flex flex-col justify-between gap-4 mt-4 border-t border-slate-800/80 pt-4">
+                    
+                    <div class="flex justify-between items-baseline" id="payment-summary-total-price-wrapper">
+                      <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Total Pembayaran</span>
+                      <span id="summary-total-price" class="text-lg md:text-xl font-black text-fuchsia-400 font-mono">
+                        Rp 0
+                      </span>
+                    </div>
 
-                  <div class="flex justify-between">
-                    <span>Metode Transaksi</span>
-                    <span id="summary-payment-method" class="text-slate-205">-</span>
-                  </div>
-
-                  <div id="summary-discount-row" class="hidden flex justify-between text-pink-400">
-                    <span>Potongan Promo</span>
-                    <span id="summary-discount-val">-Rp 0</span>
-                  </div>
-
-                  <div class="border-t border-slate-800/80 my-1 pt-4.5 flex justify-between items-baseline">
-                    <span class="text-sm font-black text-slate-105">Total Pembayaran</span>
-                    <span id="summary-total-price" class="text-lg md:text-xl font-black text-fuchsia-400 font-mono">
-                      Rp 0
-                    </span>
+                    <button type="submit" id="btn-buy-now" class="w-full rounded-2xl py-4 text-center text-xs md:text-sm font-black tracking-wide uppercase transition-all shadow-xs neup-orange-flat text-white cursor-pointer hover:neup-orange-pressed active:scale-98 border-none m-0">
+                      Beli Sekarang 🚀
+                    </button>
                   </div>
                 </div>
 
                 <div id="validation-error-banner" class="hidden my-3 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-[10px] text-rose-400 font-bold"></div>
-
-                <button type="submit" id="btn-buy-now" class="mt-6 w-full rounded-2xl py-4 text-center text-xs md:text-sm font-black tracking-wide uppercase transition-all shadow-xs neup-orange-flat text-white cursor-pointer hover:neup-orange-pressed active:scale-98 border-none">
-                  Beli Sekarang 🚀
-                </button>
               </div>
 
               <!-- Accordion: Cara Top Up -->
@@ -629,6 +749,19 @@
           return;
         }
       });
+    }
+
+    function toggleMobileSummary() {
+      if (window.innerWidth >= 1024) return;
+      const card = document.getElementById('payment-summary-card');
+      const chevron = document.getElementById('mobile-summary-chevron');
+      if (card) {
+        card.classList.toggle('mobile-expanded');
+        const isExpanded = card.classList.contains('mobile-expanded');
+        if (chevron) {
+          chevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+      }
     }
   </script>
 @endsection

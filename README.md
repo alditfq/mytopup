@@ -1,66 +1,383 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# 🎮 MyTopup
+### Marketplace Top-Up Game Modern — Production-Ready Laravel Application
 
-## About Laravel
+[![PHP](https://img.shields.io/badge/PHP-8.2-purple?logo=php)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-12-red?logo=laravel)](https://laravel.com)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql)](https://mysql.com)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **MyTopup** adalah platform marketplace top-up game yang lengkap, aman, dan scalable. Mendukung top-up diamonds, UC, Robux, dan ratusan game lainnya — plus marketplace akun game premium dengan sistem pengiriman berbasis email admin.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+</div>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ✨ Fitur Utama
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Kategori | Fitur |
+|---|---|
+| 🛒 **Marketplace** | Katalog game, nominal top-up, akun game premium |
+| 💳 **Pembayaran** | QRIS, e-wallet, transfer bank, dengan simulasi konfirmasi |
+| 📧 **Email** | Notifikasi topup sukses & pengiriman kredensial akun otomatis |
+| 🎁 **Promo** | Kode voucher diskon dengan batas pemakaian & tanggal kedaluwarsa |
+| ⭐ **Ulasan** | Review transaksi dengan rating bintang |
+| 🔐 **Auth** | Register, login, profil user dengan update password |
+| 👑 **Admin Panel** | Dashboard analytics, manajemen game/nominal/akun/promo/user |
+| 📊 **Analytics** | Chart pendapatan 30 hari, volume transaksi, game terlaris |
+| 🛡️ **Security** | Admin suspension, proteksi double-checkout, custom error pages |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🏗️ Arsitektur Sistem
 
-## Laravel Sponsors
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── AuthController.php          # Login, register, logout
+│   │   ├── HomeController.php          # Halaman beranda, katalog akun
+│   │   ├── TransactionController.php   # Checkout, detail transaksi
+│   │   ├── PaymentController.php       # Konfirmasi bayar, halaman sukses
+│   │   ├── DashboardController.php     # Dashboard user, profil
+│   │   └── AdminController.php         # Full CRUD admin panel
+│   ├── Requests/                       # Form Requests (validation layer)
+│   │   ├── LoginRequest.php
+│   │   ├── RegisterRequest.php
+│   │   ├── CheckoutRequest.php
+│   │   ├── StoreGameRequest.php
+│   │   ├── UpdateGameRequest.php
+│   │   ├── StoreAccountRequest.php
+│   │   ├── UpdateAccountRequest.php
+│   │   └── DeliverAccountRequest.php
+│   └── Middleware/
+│       ├── AdminMiddleware.php          # Auth + suspension check
+│       └── MaintenanceMiddleware.php
+├── Services/                           # Business Logic Layer
+│   ├── PromoService.php                # Validasi & aplikasi kode promo
+│   ├── TransactionService.php          # Checkout logic + anti-spam lock
+│   └── FulfillmentService.php          # Email delivery (topup + akun)
+├── Mail/
+│   ├── TopupSuccessMail.php            # Notifikasi top-up berhasil
+│   └── AccountDeliveryMail.php         # Pengiriman kredensial akun
+└── Models/
+    ├── User.php
+    ├── Game.php
+    ├── Nominal.php
+    ├── Transaction.php                  # + delivered_at, delivered_by
+    ├── GameAccount.php
+    ├── PaymentMethod.php
+    ├── Promo.php
+    ├── Review.php
+    └── Setting.php
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🗄️ Skema Database (ERD)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```
+users
+├── id, name, email, password, phone
+├── role (user|admin), is_suspended
+└── cashback_saved
 
-## Contributing
+games
+├── id, slug, name, category, developer
+├── thumbnail_url, banner_url
+├── id_label, zone_id_label, id_helper_text
+├── cashback_percent, has_discount
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+nominals
+├── id, game_id (FK), item_id, name
+├── price, discount_price
+└── is_best_seller, tag
 
-## Code of Conduct
+game_accounts
+├── id, game_id (FK), slug, title, description
+├── rank, level, skin_count
+├── login_method, bind_status
+├── price, images (JSON), account_data (encrypted)
+├── status (available|sold), featured
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+transactions
+├── id, invoice (unique), user_id (FK nullable)
+├── game_id (FK), nominal_id (FK), game_account_id (FK nullable)
+├── payment_method_id (FK)
+├── target_id, zone_id, nickname, server
+├── nominal_name, nominal_price, original_price
+├── discount_amount, promo_code_used, total_payment
+├── status (pending|success|failed|waiting_delivery|delivered)
+├── status_logs (JSON)
+├── delivered_at, delivered_by     ← (system: email delivery tracking)
+└── timestamps
 
-## Security Vulnerabilities
+payment_methods
+├── id, slug, name, group (qris|e-wallet|bank)
+├── fee, account_number
+├── instructions (JSON), image
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+promos
+├── id, title, code (unique), description, image
+├── discount_type (nominal|percent), discount_amount
+├── min_transaction, max_uses, uses_count
+├── expiry_date, is_active, claim_url
 
-## License
+reviews
+├── id, transaction_id (FK), user_id (FK)
+├── rating (1-5), comment
+└── timestamps
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+settings
+└── id, key (unique), value
+```
+
+---
+
+## 🔄 Flow Transaksi
+
+### Topup Diamond / UC / dll
+```
+User pilih game → pilih nominal → input ID game
+→ pilih payment method → checkout
+→ halaman waiting (konfirmasi bayar)
+→ [Simulasi] klik "Sudah Bayar"
+→ status = success → email konfirmasi dikirim
+→ halaman success
+```
+
+### Pembelian Akun Game
+```
+User pilih akun game → checkout
+→ halaman waiting
+→ [Simulasi] klik "Sudah Bayar"
+→ status = waiting_delivery → akun dikunci
+→ Admin membuka detail transaksi
+→ Admin isi kredensial (email + password + notes)
+→ klik "Kirim Akun" → FulfillmentService mengirim email
+→ status = delivered → email kredensial dikirim ke buyer
+```
+
+---
+
+## 🚀 Instalasi & Setup
+
+### Prerequisites
+- PHP 8.2+
+- MySQL 8.0+
+- Composer
+- XAMPP / Laragon (local)
+- Git
+
+### Langkah Instalasi
+
+```bash
+# 1. Clone repository
+git clone https://github.com/YOUR_USERNAME/store_laravel.git
+cd store_laravel
+
+# 2. Install dependencies
+composer install
+
+# 3. Salin file environment
+cp .env.example .env
+php artisan key:generate
+
+# 4. Konfigurasi .env
+APP_NAME=MyTopup
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=store_laravel
+DB_USERNAME=root
+DB_PASSWORD=
+
+MAIL_MAILER=log          # log untuk dev | smtp untuk production
+
+# 5. Jalankan migrasi & seeder
+php artisan migrate
+php artisan db:seed       # (jika ada seeder)
+
+# 6. Jalankan server
+php artisan serve
+```
+
+### Konfigurasi Email (Production)
+
+Untuk production, ganti `MAIL_MAILER=log` menjadi:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your@gmail.com
+MAIL_FROM_NAME="MyTopup"
+```
+
+> **Note:** Di mode `log`, semua email ditulis ke `storage/logs/laravel.log`
+
+---
+
+## 👤 Akun Default
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@demo.com | password |
+| User | user@demo.com | password |
+
+> **Note:** Sesuaikan dengan seeder yang ada. Untuk keamanan production, ubah password default setelah instalasi.
+
+---
+
+## 🛡️ Fitur Keamanan
+
+- **Admin Middleware**: Blokir akun admin yang di-suspend (auto logout)
+- **Form Requests**: Validasi input terpusat di semua endpoint
+- **Anti Double Checkout**: Lock 10 detik per user di `TransactionService`
+- **Price Integrity**: Harga diambil dari database, bukan dari input user
+- **CSRF Protection**: Semua form dilindungi Laravel CSRF
+- **Custom Error Pages**: 403, 404, 500 bertema dark gaming UI
+
+---
+
+## 📧 Sistem Email
+
+| Mail Class | Trigger | Penerima |
+|---|---|---|
+| `TopupSuccessMail` | Payment confirmed (non-akun) | User buyer |
+| `AccountDeliveryMail` | Admin klik "Kirim Akun" | User buyer |
+
+Template email: `resources/views/emails/`
+
+---
+
+## 🎨 Tech Stack
+
+| Layer | Teknologi |
+|---|---|
+| Backend | PHP 8.2, Laravel 12 |
+| Frontend | Blade Templates, Vanilla CSS, Vanilla JS |
+| Database | MySQL |
+| Icons | Lucide Icons |
+| Fonts | Google Fonts (Outfit, Inter) |
+| Mail | Laravel Mail (log/SMTP) |
+
+---
+
+## 📁 Struktur Direktori Penting
+
+```
+public/
+├── assets/
+│   ├── css/style.css           # Stylesheet utama (custom design system)
+│   ├── js/script.js            # Frontend JavaScript
+│   └── img/                    # Static assets
+└── uploads/
+    ├── games/                  # Thumbnail & banner game
+    ├── accounts/               # Gambar akun game
+    ├── payments/               # Logo metode pembayaran
+    ├── promos/                 # Banner promo
+    └── settings/               # Logo toko
+
+resources/views/
+├── layouts/
+│   ├── app.blade.php           # Layout utama (SEO + meta tags)
+│   └── admin.blade.php         # Layout admin panel
+├── partials/                   # Komponen reusable (navbar, footer)
+├── emails/                     # Template email responsif
+├── errors/                     # Halaman error kustom (403, 404, 500)
+└── admin/                      # View admin panel
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Jalankan semua test
+php artisan test
+
+# Clear semua cache
+php artisan view:clear
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+```
+
+---
+
+## 📸 Screenshots
+
+### User Interface
+- **Homepage**: Katalog game dengan promo carousel
+- **Game Detail**: Pilih nominal & checkout
+- **Payment Waiting**: Simulasi pembayaran
+- **Dashboard User**: Riwayat transaksi & profil
+
+### Admin Panel
+- **Dashboard**: Analytics & revenue chart
+- **Manajemen Game**: CRUD game & nominal
+- **Transaksi**: Detail & delivery akun game
+- **Promo**: Kelola kode voucher
+
+---
+
+## 📋 Panduan Demo / Presentasi
+
+### Skenario 1: Top-up Diamond
+1. Buka beranda → pilih game (Mobile Legends)
+2. Pilih nominal → input User ID → pilih payment
+3. Checkout → klik "Sudah Bayar" di halaman waiting
+4. Lihat email di `storage/logs/laravel.log` → cek `TopupSuccessMail`
+
+### Skenario 2: Beli Akun Game
+1. Buka menu Akun Game → pilih akun
+2. Checkout → konfirmasi bayar → status `waiting_delivery`
+3. Login sebagai Admin → buka Transaksi → klik detail
+4. Isi form "Kirim Akun" (email + password)
+5. Cek log email untuk `AccountDeliveryMail`
+
+### Skenario 3: Admin Panel
+1. Login `/admin` → lihat dashboard (revenue chart, recent transactions)
+2. Kelola game, nominal, promo, metode pembayaran
+3. Suspend user → coba login user → lihat blokir
+
+---
+
+## 🤝 Contributing
+
+Kontribusi sangat diterima! Silakan:
+1. Fork repository ini
+2. Buat branch fitur baru (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+---
+
+## 📝 License
+
+Project ini menggunakan lisensi MIT. Lihat file `LICENSE` untuk detail.
+
+---
+
+## 📞 Contact & Support
+
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/store_laravel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/store_laravel/discussions)
+
+---
+
+<div align="center">
+
+### Made with ❤️ using **Laravel 12** & **PHP 8.2**
+
+⭐ Star this repo if you find it helpful!
+
+</div>

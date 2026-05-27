@@ -100,15 +100,7 @@
         <!-- Divider -->
         <div class="my-6 flex items-center justify-between">
           <span class="w-1/5 border-b border-slate-300/40"></span>
-          <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest h-auto select-none">Info Akun Uji Coba</span>
           <span class="w-1/5 border-b border-slate-300/40"></span>
-        </div>
-
-        <!-- Testing Credentials Helper -->
-        <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100/80 text-[10px] text-left text-indigo-700 space-y-1.5 leading-normal">
-          <p class="font-extrabold m-0">🔑 Gunakan kredensial uji coba di bawah:</p>
-          <p class="m-0 font-semibold">• Akun Member: <code class="bg-indigo-100 px-1 py-0.5 rounded font-bold font-mono">alex.cahya@gmail.com</code> / <code class="bg-indigo-100 px-1 py-0.5 rounded font-bold font-mono">alex123</code></p>
-          <p class="m-0 font-semibold">• Akun Admin: <code class="bg-indigo-100 px-1 py-0.5 rounded font-bold font-mono">admin@gametopup.com</code> / <code class="bg-indigo-100 px-1 py-0.5 rounded font-bold font-mono">admin123</code></p>
         </div>
 
       </div>

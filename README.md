@@ -174,8 +174,8 @@ User pilih akun game → checkout
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/YOUR_USERNAME/store_laravel.git
-cd store_laravel
+git clone https://github.com/alditfq/mytopup.git
+cd mytopup
 
 # 2. Install dependencies
 composer install
@@ -359,18 +359,21 @@ Kontribusi sangat diterima! Silakan:
 4. Push ke branch (`git push origin feature/AmazingFeature`)
 5. Buat Pull Request
 
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan lengkap.
+
 ---
 
 ## 📝 License
 
-Project ini menggunakan lisensi MIT. Lihat file `LICENSE` untuk detail.
+Project ini menggunakan lisensi MIT. Lihat file [LICENSE](LICENSE) untuk detail.
 
 ---
 
 ## 📞 Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/store_laravel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/store_laravel/discussions)
+- **Repository**: [github.com/alditfq/mytopup](https://github.com/alditfq/mytopup)
+- **Issues**: [GitHub Issues](https://github.com/alditfq/mytopup/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/alditfq/mytopup/discussions)
 
 ---
 

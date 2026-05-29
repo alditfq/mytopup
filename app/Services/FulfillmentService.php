@@ -24,7 +24,6 @@ class FulfillmentService
         $recipientEmail = $tx->target_id;
         $buyerName = $tx->user ? $tx->user->name : $tx->nickname;
 
-        // Send email
         Mail::to($recipientEmail)->send(new AccountDeliveryMail(
             $tx->invoice,
             $buyerName,
@@ -35,12 +34,10 @@ class FulfillmentService
             $notes
         ));
 
-        // Update transaction attributes
         $tx->status = 'delivered';
         $tx->delivered_at = now();
         $tx->delivered_by = $adminName;
 
-        // Write log entry
         $logs = $tx->status_logs;
         $logs[] = [
             'time' => date('H:i'),

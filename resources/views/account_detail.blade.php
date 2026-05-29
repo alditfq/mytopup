@@ -231,11 +231,11 @@
                 @endif
               </div>
 
-            </div><!-- end sticky area -->
+            </div>
 
-          </div><!-- end right column -->
+          </div>
 
-        </div><!-- end split grid -->
+        </div>
       </form>
 
     </div>
@@ -246,9 +246,7 @@
     let selectedPayment = null;
     let promoDiscount = 0;
 
-    // Javascript Gallery Slide Switcher
     function changeActiveImage(imgUrl, btn) {
-      // Set active image source
       const mainImg = document.getElementById('active-gallery-img');
       if (mainImg) {
         mainImg.style.opacity = '0.3';
@@ -258,20 +256,17 @@
         }, 150);
       }
 
-      // Dehighlight all thumbs
       document.querySelectorAll('.gallery-thumb-btn').forEach(b => {
         b.classList.remove('border-indigo-500', 'scale-95', 'shadow-inner');
         b.classList.add('border-slate-200');
       });
 
-      // Highlight current thumb
       if (btn) {
         btn.classList.remove('border-slate-200');
         btn.classList.add('border-indigo-500', 'scale-95', 'shadow-inner');
       }
     }
 
-    // Payment Selection
     function selectPaymentMethod(radio, name, fee) {
       document.querySelectorAll('.payment-card').forEach(card => {
         card.classList.remove('neup-pressed-sm', 'border-indigo-500', 'bg-[#ffeef4]', 'border-[#ff007f]');
@@ -289,7 +284,6 @@
       calculateTotal();
     }
 
-    // Promo Coupon Calculation
     function applyPromoCode() {
       const code = document.getElementById('promo_input_code').value.toUpperCase().trim();
       const statusBox = document.getElementById('promo-status-box');
@@ -302,8 +296,6 @@
       }
 
       statusBox.classList.remove('hidden');
-
-      // Client-side coupons list matching seeders
       const promosList = {
         'CSHBKNEW': { discount: 25000, min: 30000, desc: 'Kupon CSHBKNEW aktif! Diskon Rp 25.000 terpasang.' },
         'WEEKENDGAMER': { discount: 15000, min: 50000, desc: 'Kupon WEEKENDGAMER aktif! Diskon Rp 15.000 terpasang.' },
@@ -330,7 +322,6 @@
       calculateTotal();
     }
 
-    // Number count roller effects
     let currentTotalVal = baseAccountPrice;
     let currentDiscountVal = 0;
 
@@ -372,7 +363,6 @@
       }
     }
 
-    // Form Submission check
     const form = document.getElementById('checkout-form');
     const errBanner = document.getElementById('validation-error-banner');
     if (form) {

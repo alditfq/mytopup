@@ -14,14 +14,11 @@ class HomeController extends Controller
     public function index()
     {
         $games = Game::with('nominals')->get();
-        // Only load active promos on the homepage
         $promos = Promo::where('is_active', true)->get();
 
-        // System configurations
         $shopName = Setting::getVal('shop_name', 'GameTopup');
         $logoUrl = Setting::getVal('logo_url', '');
         
-        // Flash sale configurations
         $flashSaleShow = Setting::getVal('flash_sale_show', 'true');
         $flashSaleEnd  = Setting::getVal('flash_sale_end', '');
         $flashSaleTitle = Setting::getVal('flash_sale_title', 'Sabet Diskon Game Terpopuler Akhir Pekan');
@@ -29,7 +26,6 @@ class HomeController extends Controller
         $flashSaleSlug = Setting::getVal('flash_sale_slug', 'mobile-legends');
         $flashSaleButtonText = Setting::getVal('flash_sale_button_text', 'Cek Flash Sale MLBB');
 
-        // Load featured accounts for homepage bonus
         $featuredAccounts = GameAccount::with('game')
             ->where('status', 'available')
             ->where('featured', true)
@@ -60,7 +56,6 @@ class HomeController extends Controller
     {
         $query = GameAccount::with('game')->where('status', 'available');
 
-        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -72,17 +67,14 @@ class HomeController extends Controller
             });
         }
 
-        // Game filter
         if ($request->filled('game_id') && $request->game_id !== 'all') {
             $query->where('game_id', $request->game_id);
         }
 
-        // Rank filter
         if ($request->filled('rank') && $request->rank !== 'all') {
             $query->where('rank', $request->rank);
         }
 
-        // Price Sort
         if ($request->filled('sort')) {
             if ($request->sort === 'price_asc') {
                 $query->orderBy('price', 'asc');
@@ -100,7 +92,6 @@ class HomeController extends Controller
             $q->where('status', 'available');
         })->get();
         
-        // Get all unique ranks for filter select
         $ranks = GameAccount::where('status', 'available')->distinct()->pluck('rank')->toArray();
 
         return view('accounts', compact('accounts', 'games', 'ranks'));

@@ -281,7 +281,6 @@
     document.getElementById('submit-review-btn').style.opacity = '1';
   }
 
-  // Hover effects
   document.querySelectorAll('.star-btn').forEach(btn => {
     btn.addEventListener('mouseenter', () => {
       const hoverVal = parseInt(btn.dataset.value);
@@ -296,7 +295,6 @@
     });
   });
 
-  // Initially disable submit
   document.getElementById('submit-review-btn').style.opacity = '0.5';
 </script>
 @endpush

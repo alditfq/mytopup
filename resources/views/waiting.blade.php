@@ -215,7 +215,6 @@
   </div>
 
   <script>
-    // Live countdown timer ticking simulation
     let totalSeconds = 24 * 3600 - 15; // Simulated 24 hour limit
     const hrBox = document.getElementById('wait-hour-box');
     const minBox = document.getElementById('wait-min-box');
@@ -238,7 +237,6 @@
       }, 1000);
     }
 
-    // Toggle cara bayar accordion
     function togglePayAccordion() {
       const content = document.getElementById('accordion-pay-content');
       const chev = document.getElementById('pay-accordion-chevron');
@@ -251,7 +249,6 @@
       }
     }
 
-    // Copy to clipboard helper
     function copyToClipboardText(text, btn) {
       navigator.clipboard.writeText(text).then(() => {
         const oldText = btn.textContent;

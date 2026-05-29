@@ -18,7 +18,6 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Get top 3 popular games dynamically
         $popularGames = \App\Models\Game::orderBy('rating', 'desc')->take(3)->get();
 
         return view('dashboard', compact('user', 'transactions', 'popularGames'));
@@ -41,11 +40,9 @@ class DashboardController extends Controller
             'new_password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        // Update name and phone
         $user->name = $request->name;
         $user->phone = $request->phone;
 
-        // Update password if provided
         if ($request->new_password) {
             if (!Hash::check($request->current_password, $user->password)) {
                 return back()->withErrors([

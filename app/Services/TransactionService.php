@@ -40,7 +40,6 @@ class TransactionService
         $game = Game::findOrFail($gameId);
         $paymentMethod = PaymentMethod::findOrFail($paymentMethodId);
 
-        // Define exact target_id string for duplicate check
         $finalTargetId = $targetId;
 
         // 1. Prevent Duplicate Checkout Exploit (10 seconds lock)
@@ -72,7 +71,6 @@ class TransactionService
             $price = $nominal->discount_price ?? $nominal->price;
         }
 
-        // Secure positive price check
         if ($price < 0) {
             throw new \Exception('Harga produk tidak valid.');
         }
@@ -105,7 +103,6 @@ class TransactionService
         $gameAbbr = strtoupper(substr(str_replace('-', '', $game->slug), 0, 2));
         $invoice = 'INV-' . date('Ymd') . '-' . $gameAbbr . rand(100, 999);
 
-        // Generate simulated VA or QRIS
         $vaNumber = null;
         $qrCodeUrl = null;
         if ($paymentMethod->group === 'bank') {

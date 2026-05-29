@@ -52,7 +52,6 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
-        // --- Build 7-day real chart data ---
         $chartLabels   = [];
         $chartRevenue  = [];
         $chartTxVolume = [];
@@ -146,9 +145,6 @@ class AdminController extends Controller
         return back()->with('success', 'Status transaksi #' . $transaction->invoice . ' berhasil diperbarui menjadi ' . strtoupper($request->status) . '.');
     }
 
-    // ==========================================
-    // GAMES CRUD
-    // ==========================================
     public function games(Request $request)
     {
         $query = Game::query();
@@ -253,9 +249,6 @@ class AdminController extends Controller
         return back()->with('success', 'Game beserta seluruh nominal itemnya berhasil dihapus!');
     }
 
-    // ==========================================
-    // NOMINALS CRUD
-    // ==========================================
     public function nominals(Request $request)
     {
         $query = Nominal::query()->with('game');
@@ -355,9 +348,6 @@ class AdminController extends Controller
         return back()->with('success', 'Nominal item berhasil dihapus!');
     }
 
-    // ==========================================
-    // PAYMENT METHODS CRUD
-    // ==========================================
     public function paymentMethods()
     {
         $paymentMethods = PaymentMethod::orderBy('created_at', 'desc')->get();
@@ -450,9 +440,6 @@ class AdminController extends Controller
         return back()->with('success', 'Metode pembayaran berhasil dihapus!');
     }
 
-    // ==========================================
-    // USERS MANAGEMENT
-    // ==========================================
     public function users(Request $request)
     {
         $query = User::query()->with(['transactions.game'])->withCount('transactions');
@@ -479,9 +466,6 @@ class AdminController extends Controller
         return view('admin.users', compact('users'));
     }
 
-    // ==========================================
-    // PROMOS CRUD
-    // ==========================================
     public function promos()
     {
         $promos = Promo::orderBy('created_at', 'desc')->get();
@@ -588,12 +572,8 @@ class AdminController extends Controller
         return back()->with('success', 'Kode voucher ' . $promo->code . ' berhasil ' . $status . '!');
     }
 
-    // ==========================================
-    // ANALYTICS & CSV REPORTS
-    // ==========================================
     public function reports()
     {
-        // --- 30-day daily revenue + transaction volume ---
         $chartLabels      = [];
         $chartRevenue     = [];
         $chartTxVolume    = [];
@@ -618,7 +598,6 @@ class AdminController extends Controller
             $chartFailed[]   = $failed;
         }
 
-        // --- Payment method donut data ---
         $popularPayments = Transaction::selectRaw('payment_method_id, COUNT(*) as count')
             ->where('status', 'success')
             ->groupBy('payment_method_id')
@@ -629,7 +608,6 @@ class AdminController extends Controller
         $paymentLabels = $popularPayments->pluck('paymentMethod.name')->toArray();
         $paymentCounts = $popularPayments->pluck('count')->toArray();
 
-        // --- Best selling games ---
         $bestGames = Transaction::selectRaw('game_id, COUNT(*) as sales_count, SUM(total_payment) as revenue')
             ->where('status', 'success')
             ->groupBy('game_id')
@@ -638,7 +616,6 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
-        // --- Summary stats ---
         $totalRevenue30d = array_sum($chartRevenue);
         $totalTx30d      = array_sum($chartTxVolume);
         $avgOrderValue   = $totalTx30d > 0 ? round($totalRevenue30d / array_sum($chartSuccess) ?: 1) : 0;
@@ -652,9 +629,7 @@ class AdminController extends Controller
         ));
     }
 
-    // ==========================================
-    // TRANSACTION AUDITING DETAILS
-    // ==========================================
+
     public function transactionDetail($id)
     {
         $tx = Transaction::with(['game', 'nominal', 'paymentMethod', 'user', 'gameAccount'])
@@ -740,9 +715,7 @@ class AdminController extends Controller
         }
     }
 
-    // ==========================================
-    // GAME ACCOUNTS CRUD
-    // ==========================================
+
     public function accounts(Request $request)
     {
         $query = GameAccount::query()->with('game');

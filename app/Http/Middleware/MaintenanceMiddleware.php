@@ -18,7 +18,6 @@ class MaintenanceMiddleware
         $isMaintenance = Setting::getVal('is_maintenance', 'false');
 
         if ($isMaintenance === 'true') {
-            // Allow admin routes, auth triggers, or active logged-in admins to bypass
             if ($request->is('admin*') || 
                 $request->is('logout') || 
                 $request->is('login') || 
@@ -26,7 +25,6 @@ class MaintenanceMiddleware
                 return $next($request);
             }
 
-            // Present the premium neomorphic maintenance warnings screen
             return response()->view('maintenance', [], 503);
         }
 

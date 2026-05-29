@@ -594,7 +594,6 @@
   </div>
 
   <script>
-    // Slider functionality
     let currentSlide = 0;
     const slides = document.querySelectorAll('.promo-slide');
     const dots = document.querySelectorAll('.promo-dot');
@@ -602,13 +601,11 @@
     function goToSlide(idx) {
       if (slides.length === 0) return;
       
-      // Shift slide track horizontally
       const track = document.getElementById('promo-slide-track');
       if (track) {
         track.style.transform = `translate3d(-${idx * 100}%, 0, 0)`;
       }
 
-      // Update active slide classes
       slides.forEach((s, i) => {
         if (i === idx) {
           s.classList.add('active');
@@ -629,7 +626,6 @@
       currentSlide = idx;
     }
 
-    // Drag/Swipe Gesture & Navigation Functionality
     const container = document.getElementById('promo-banner-container');
     const track = document.getElementById('promo-slide-track');
     
@@ -668,7 +664,6 @@
       startAutoPlay();
     });
 
-    // Touch events
     container?.addEventListener('touchstart', (e) => {
       isDragging = true;
       startX = e.touches[0].clientX;
@@ -713,7 +708,6 @@
       startAutoPlay();
     });
 
-    // Mouse events
     container?.addEventListener('mousedown', (e) => {
       isDragging = true;
       startX = e.clientX;
@@ -764,7 +758,6 @@
     if (container) container.style.cursor = 'grab';
     startAutoPlay();
 
-    // FAQ Accordion functionality
     function toggleFaq(idx, btn) {
       const answer = document.getElementById(`faq-ans-${idx}`);
       const chevron = btn.querySelector('.dropdown-chevron');
@@ -777,9 +770,7 @@
       }
     }
 
-    // Category filter functionality
     function filterCategory(category, btn) {
-      // Toggle active class on buttons
       document.querySelectorAll('.category-btn').forEach(b => {
         b.classList.remove('active', 'neup-pressed-sm');
         b.classList.add('neup-flat-sm', 'text-slate-600');
@@ -791,14 +782,12 @@
       btn.style.background = '#ff007f';
       btn.style.color = '#ffffff';
 
-      // Filter grid
       const cards = document.querySelectorAll('.game-card');
       let visibleIdx = 0;
 
       cards.forEach(card => {
         const cat = card.getAttribute('data-category');
         
-        // Remove animation class & reset style first
         card.classList.remove('game-card-animate-in');
         card.style.opacity = '0';
         card.style.transform = 'translateY(24px) scale(0.96)';
@@ -806,11 +795,9 @@
         if (category === 'all' || cat === category) {
           card.style.display = 'flex';
           
-          // Apply staggered animation delay (e.g. 35ms per card, up to max 280ms so it stays snappy!)
           const delay = Math.min(visibleIdx * 35, 280);
           card.style.animationDelay = `${delay}ms`;
           
-          // Trigger reflow to restart animation
           void card.offsetWidth;
           
           card.classList.add('game-card-animate-in');
@@ -821,7 +808,6 @@
       });
     }
 
-    // Search filter functionality
     const searchInput = document.getElementById('game-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -839,7 +825,6 @@
           }
         });
 
-        // Show empty message if no matches
         let emptyMsg = document.getElementById('search-empty-msg');
         if (matches === 0) {
           if (!emptyMsg) {
@@ -856,7 +841,7 @@
       });
     }
 
-    // Animate game cards on initial load
+
     document.addEventListener('DOMContentLoaded', () => {
       const cards = document.querySelectorAll('.game-card');
       cards.forEach((card, idx) => {

@@ -516,7 +516,6 @@
   </div>
 
   <script>
-    // State for live summary preview calculations
     let selectedNominal = null;
     let selectedPayment = null;
     let promoDiscount = 0;
@@ -555,15 +554,12 @@
       }
     }
 
-    // Selection helper for nominal
     function selectNominal(radio, name, price) {
-      // Dehighlight all nominal cards
       document.querySelectorAll('.nominal-card').forEach(card => {
         card.classList.remove('neup-pressed-sm', 'border-indigo-500');
         card.classList.add('neup-flat');
       });
 
-      // Highlight target card
       const parentLabel = radio.closest('label');
       if (parentLabel) {
         parentLabel.classList.remove('neup-flat');
@@ -572,20 +568,16 @@
 
       selectedNominal = { name, price };
       
-      // Update summary preview
       document.getElementById('summary-nominal-item').textContent = name;
       calculateTotal();
     }
 
-    // Selection helper for payment
     function selectPaymentMethod(radio, name, fee) {
-      // Dehighlight all payment cards
       document.querySelectorAll('.payment-card').forEach(card => {
         card.classList.remove('neup-pressed-sm', 'border-fuchsia-500');
         card.classList.add('neup-flat');
       });
 
-      // Highlight target card
       const parentLabel = radio.closest('label');
       if (parentLabel) {
         parentLabel.classList.remove('neup-flat');
@@ -594,12 +586,10 @@
 
       selectedPayment = { name, fee };
 
-      // Update summary preview
       document.getElementById('summary-payment-method').textContent = name;
       calculateTotal();
     }
 
-    // Apply Promo Code
     function applyPromoCode() {
       const code = document.getElementById('promo_input_code').value.toUpperCase().trim();
       const statusBox = document.getElementById('promo-status-box');
@@ -618,7 +608,6 @@
 
       statusBox.classList.remove('hidden');
 
-      // Check client-side promos list
       const promosList = {
         'CSHBKNEW': { discount: 25000, min: 30000, desc: 'Kupon CSHBKNEW aktif! Potongan langsung Rp 25.000 berhasil dipasang.' },
         'WEEKENDGAMER': { discount: 15000, min: 50000, desc: 'Kupon WEEKENDGAMER aktif! Potongan langsung Rp 15.000 berhasil dipasang.' },
@@ -704,7 +693,6 @@
       requestAnimationFrame(update);
     }
 
-    // Live price calculations
     function calculateTotal() {
       if (!selectedNominal) return;
 
@@ -712,10 +700,8 @@
       const fee = selectedPayment ? selectedPayment.fee : 0;
       const finalPrice = Math.max(0, (basePrice - promoDiscount) + fee);
 
-      // Animate total price display using rolling number counter
       animatePriceCount(finalPrice);
 
-      // Animate/Update discount row display
       const discRow = document.getElementById('summary-discount-row');
       if (promoDiscount > 0) {
         discRow.classList.remove('hidden');
@@ -726,7 +712,6 @@
       }
     }
 
-    // Form submission validation
     const form = document.getElementById('checkout-form');
     const errBanner = document.getElementById('validation-error-banner');
     if (form) {
